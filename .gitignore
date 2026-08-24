@@ -1,0 +1,46 @@
+# ===== Node / Frontend =====
+node_modules/
+dist/
+build/
+.vite/
+.cache/
+*.local
+
+# ===== Python / AI worker =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# ===== Electron =====
+electron/dist/
+electron/out/
+
+# ===== Audio / large assets =====
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.m4a
+assets/raw/
+
+# ===== Environment & secrets =====
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+
+# ===== Editor / OS =====
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ===== Logs =====
+*.log
+npm-debug.log*
