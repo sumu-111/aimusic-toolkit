@@ -44,3 +44,9 @@ Thumbs.db
 # ===== Logs =====
 *.log
 npm-debug.log*
+
+# ===== 参考项目（研究材料，含嵌套 git 仓库，不入库） =====
+references/
+
+# ===== 本地工作区（WorkBuddy 记忆与本地数据，不公开） =====
+.workbuddy/

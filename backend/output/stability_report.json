@@ -1,0 +1,148 @@
+{
+  "date": "2026-08-24 16:11:24",
+  "rounds": {
+    "light": [
+      {
+        "ok": true,
+        "analyze_ms": 2897,
+        "intent_ms": 208,
+        "render_ms": 1184,
+        "total_ms": 4289,
+        "before_cents": 28.23,
+        "after_cents": 5.64,
+        "improved": true,
+        "output": "C:\\Users\\林桂良\\Desktop\\ai音乐\\backend\\output\\test_offpitch_corrected.wav",
+        "round": 1
+      },
+      {
+        "ok": true,
+        "analyze_ms": 2,
+        "intent_ms": 160,
+        "render_ms": 1080,
+        "total_ms": 1243,
+        "before_cents": 28.23,
+        "after_cents": 5.64,
+        "improved": true,
+        "output": "C:\\Users\\林桂良\\Desktop\\ai音乐\\backend\\output\\test_offpitch_corrected.wav",
+        "round": 2
+      },
+      {
+        "ok": true,
+        "analyze_ms": 2,
+        "intent_ms": 155,
+        "render_ms": 1089,
+        "total_ms": 1246,
+        "before_cents": 28.23,
+        "after_cents": 5.64,
+        "improved": true,
+        "output": "C:\\Users\\林桂良\\Desktop\\ai音乐\\backend\\output\\test_offpitch_corrected.wav",
+        "round": 3
+      },
+      {
+        "ok": true,
+        "analyze_ms": 2,
+        "intent_ms": 180,
+        "render_ms": 1109,
+        "total_ms": 1292,
+        "before_cents": 28.23,
+        "after_cents": 5.64,
+        "improved": true,
+        "output": "C:\\Users\\林桂良\\Desktop\\ai音乐\\backend\\output\\test_offpitch_corrected.wav",
+        "round": 4
+      },
+      {
+        "ok": true,
+        "analyze_ms": 2,
+        "intent_ms": 151,
+        "render_ms": 1077,
+        "total_ms": 1231,
+        "before_cents": 28.23,
+        "after_cents": 5.64,
+        "improved": true,
+        "output": "C:\\Users\\林桂良\\Desktop\\ai音乐\\backend\\output\\test_offpitch_corrected.wav",
+        "round": 5
+      }
+    ],
+    "heavy": [
+      {
+        "ok": true,
+        "analyze_ms": 929,
+        "intent_ms": 281,
+        "render_ms": 2101,
+        "total_ms": 3313,
+        "before_cents": 28.23,
+        "after_cents": 5.64,
+        "improved": true,
+        "output": "C:\\Users\\林桂良\\Desktop\\ai音乐\\backend\\output\\test_offpitch_30s_corrected.wav",
+        "round": 1
+      },
+      {
+        "ok": true,
+        "analyze_ms": 3,
+        "intent_ms": 178,
+        "render_ms": 2085,
+        "total_ms": 2268,
+        "before_cents": 28.23,
+        "after_cents": 5.64,
+        "improved": true,
+        "output": "C:\\Users\\林桂良\\Desktop\\ai音乐\\backend\\output\\test_offpitch_30s_corrected.wav",
+        "round": 2
+      },
+      {
+        "ok": true,
+        "analyze_ms": 3,
+        "intent_ms": 192,
+        "render_ms": 2090,
+        "total_ms": 2286,
+        "before_cents": 28.23,
+        "after_cents": 5.64,
+        "improved": true,
+        "output": "C:\\Users\\林桂良\\Desktop\\ai音乐\\backend\\output\\test_offpitch_30s_corrected.wav",
+        "round": 3
+      },
+      {
+        "ok": true,
+        "analyze_ms": 3,
+        "intent_ms": 259,
+        "render_ms": 2084,
+        "total_ms": 2347,
+        "before_cents": 28.23,
+        "after_cents": 5.64,
+        "improved": true,
+        "output": "C:\\Users\\林桂良\\Desktop\\ai音乐\\backend\\output\\test_offpitch_30s_corrected.wav",
+        "round": 4
+      },
+      {
+        "ok": true,
+        "analyze_ms": 3,
+        "intent_ms": 223,
+        "render_ms": 2072,
+        "total_ms": 2299,
+        "before_cents": 28.23,
+        "after_cents": 5.64,
+        "improved": true,
+        "output": "C:\\Users\\林桂良\\Desktop\\ai音乐\\backend\\output\\test_offpitch_30s_corrected.wav",
+        "round": 5
+      }
+    ]
+  },
+  "error_paths": [
+    {
+      "case": "analyze_file_not_found",
+      "ok": true
+    },
+    {
+      "case": "intent_empty",
+      "ok": true
+    },
+    {
+      "case": "intent_bar_out_of_range",
+      "ok": true
+    },
+    {
+      "case": "pitch_guard_noise",
+      "ok": true
+    }
+  ],
+  "all_ok": true
+}

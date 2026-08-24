@@ -1,0 +1,9 @@
+{
+  "op": "correct_pitch",
+  "track": "vocals",
+  "start_sec": 0.0,
+  "end_sec": 33.6,
+  "mode": "auto",
+  "correction_strength": 0.8,
+  "source": "fallback_prerender"
+}
