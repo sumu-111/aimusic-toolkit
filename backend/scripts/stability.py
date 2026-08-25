@@ -21,7 +21,7 @@ from worker import app
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".."))
 ASSETS = {
     "light": os.path.join(REPO_ROOT, "assets", "test_offpitch.wav"),
-    "heavy": os.path.join(REPO_ROOT, "assets", "test_offpitch_30s.wav"),
+    "heavy": os.path.join(REPO_ROOT, "assets", "demo_heavy_30s.wav"),  # heavy 档（±55~90 cents），覆盖较重跑调
 }
 ROUNDS = 5
 BUDGET_MS = 60000   # 全链路预算

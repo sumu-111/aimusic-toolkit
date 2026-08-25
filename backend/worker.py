@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from analysis import analyze_file_cached, DEFAULT_SR
 from pitch import render_and_export, PitchGuardError, verify_wav
-from agent.intent import parse_intent, IntentError
+from agent.intent import parse_intent, IntentError, preflight
 
 app = Flask(__name__)
 CORS(app)  # 浏览器兜底
@@ -95,6 +95,15 @@ def execute_plan_endpoint():
         plan = TRACKS[plan_id]["plan"]
         plan["parameters"] = parameters  # 用户改参后以最新参数为准
     try:
+        # 参数预检：与 parse_intent 同一套 preflight 规则（时间/模式/强度/范围）
+        import soundfile as _sf
+        actual = plan.get("parameters", plan)
+        check_plan = dict(actual)
+        check_plan.setdefault("track", "vocals")
+        check_state = {"analysis": {"duration_sec": _sf.info(file_path).duration}}
+        errs = preflight(check_plan, check_state)
+        if errs:
+            return err("PREFLIGHT_FAILED", "; ".join(errs), 400)
         # 正常路径：44.1kHz；请求指定或超预算时自动降采样 16kHz 兜底
         result = render_and_export(file_path, plan, out_dir=OUT_DIR,
                                    resample_to=LOW_SR if prefer_low_sr else None)

@@ -10,6 +10,8 @@ import os
 import sys
 from typing import Callable
 
+import jsonschema
+
 # 兼容直接运行（python agent/intent.py）：把仓库根加入 sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -137,6 +139,9 @@ def parse_intent(
         raw = llm(text, project_state)
         parsed = json.loads(raw)
         if isinstance(parsed, dict) and parsed.get("op") == "correct_pitch":
+            # 第一层预检：JSON Schema 结构校验（类型/枚举/required），
+            # 校验失败抛 ValidationError → 自动降级规则模板
+            jsonschema.validate(parsed, CORRECT_PITCH_SCHEMA["parameters"])
             plan = parsed
             plan["source"] = "llm"
     except Exception as e:
