@@ -18,6 +18,7 @@ MAX_SEMITONES = 2.0          # ±2 半音限制
 NOTE_JUMP_ST = 0.5           # 音符分段：音高跳变阈值（半音）
 MIN_NOTE_SEC = 0.12          # 最小音符段时长
 CROSSFADE_MS = 25            # 拼接交叉淡化，避免爆音
+CONF_THRESHOLD = 0.15        # 有效音高置信度：<0.15 视为噪声/气声段，跳过不修正
 
 
 class PitchGuardError(Exception):
@@ -146,6 +147,7 @@ def _correct_pitch_internal(
 
     # 逐段计算目标与修正量
     shifts: list[float] = []
+    skipped: list[dict] = []
     out_window = window.copy()
 
     for s, e in segs:
@@ -155,13 +157,16 @@ def _correct_pitch_internal(
         if valid.sum() == 0:
             continue
         median_f = float(np.median(seg_f0[valid]))
-        # 置信度守卫：段内平均置信度过低 → 检测不可靠，拒绝执行（对应"检测置信度过低时不执行"）
         mean_conf = float(np.mean(probs[s:e + 1][valid]))
-        if mean_conf < 0.5:
-            raise PitchGuardError(
-                f"第 {len(shifts) + 1} 段平均置信度 {mean_conf:.2f} 过低（<0.5），"
-                "检测结果不可靠，拒绝执行：请更换素材或缩小修正范围"
-            )
+        # 低置信段：判定为噪声/气声/无可靠音高，跳过不修正（保留原声）
+        # 阈值 0.15 可区分"真人声低置信"(0.2~0.8) 与"噪声"(<0.1)
+        if mean_conf < CONF_THRESHOLD:
+            skipped.append({
+                "start_sec": round(float(times[s]), 3),
+                "end_sec": round(float(times[e]), 3),
+                "confidence": round(mean_conf, 3),
+            })
+            continue
         target_st = round(hz_to_semitones(median_f))          # 最近平均律半音
         if mode == "scale" and scale:
             target_st = _nearest_in_scale(median_f, scale)
@@ -177,6 +182,13 @@ def _correct_pitch_internal(
         shifted = _shift_segment(seg_audio, sr, shift)
         out_window[s * HOP_LENGTH: min(len(window), (e + 1) * HOP_LENGTH)] = shifted[:len(seg_audio)]
 
+    # 全部段都被跳过 → 素材无有效音高，拒绝执行（保持守卫语义）
+    if not shifts:
+        raise PitchGuardError(
+            "所有音符段置信度过低（<%.2f），素材无可修正的有效人声，"
+            "请更换素材或缩小修正范围" % CONF_THRESHOLD
+        )
+
     # 合成回原音频
     result = y.copy()
     result[start_sample:end_sample] = out_window
@@ -191,6 +203,7 @@ def _correct_pitch_internal(
         "before_cents": round(before_cents, 2) if before_cents is not None else None,
         "after_cents": round(after_cents, 2) if after_cents is not None else None,
         "applied_shifts": [round(s, 3) for s in shifts],
+        "skipped_segments": skipped,
         "curve": curve,
     }
     return result, verify

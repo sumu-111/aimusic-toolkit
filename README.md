@@ -74,31 +74,52 @@
 
 完整方案、MVP 范围与 48 小时排期见 [docs/方案.md](docs/方案.md)。
 
-## 快速开始（开发环境）
+## 当前 MVP 进度（2026-08-25）
 
-> 以下为规划中的本地开发流程，MVP 阶段逐步落地。
+> 黑客松 48h 收敛：MVP = **一条修音准闭环**（导入 → 分析 → 自然语言 → 可编辑操作 → 渲染 → 对比 → 回退）。扒歌/生成/混音列为加分项与后续方向。
+
+**后端（backend/，已完成 ✅）**
+
+| 模块 | 实现 | 验证结果 |
+|------|------|----------|
+| 音乐分析 | librosa 小节定位（真人声 16 小节 ✅）+ pyin 音高轨迹 | 30s 素材分析 ≤3.5s |
+| 修音引擎 | 逐音符分段 + Phase Vocoder 修正 + 重检测验证 | 合成 28.23→3.67 cents；真人声有效段 29→19 cents（余为生理颤音） |
+| Agent | LLM 意图解析 + Schema 预检 + 规则模板兜底（断网可用） | 「第 3 小节」→ 3.76~5.72s ✅ |
+| IPC | Flask worker：`/analyze` `/parse_intent` `/execute_plan` `/health` | 端口 8787，CORS + 分析缓存 |
+| 质量守卫 | 低置信段跳过 + 全部无效拒绝，绝不静默硬改 | 噪声输入正确拒绝 ✅ |
+| 稳定性 | 2 素材 × 5 轮全链路 + 4 错误路径 | 全部通过；全链路 1.2~7s（预算 60s） |
+| 优化 | 16kHz 降采样兜底（快 5 倍）、WAV 字节校验、兜底渲染预生成 | ✅ |
+
+**前端（未启动）**：Electron/React Flow/WaveSurfer 待开发，接口契约见《后端任务清单.md》。
+
+**demo 素材**：真人声 `assets/human_vocal.wav`（29.9s，小节定位 + 修正均验证通过）；合成素材备选见 `docs/素材准备指南.md`。
+
+## 快速开始（开发环境 · 当前实际可用）
 
 ```bash
-# 1. 安装前端依赖
-cd frontend
-npm install
-npm run dev
+# 1. 启动后端 worker（Python venv 已就绪）
+cd backend
+./.venv/Scripts/python.exe worker.py        # 监听 http://127.0.0.1:8787
 
-# 2. 启动 AI 推理 worker（Python 独立进程）
-cd worker
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python -m sounder_worker   # 或 demucs / audiocraft 服务
+# 2. 验证接口
+curl http://127.0.0.1:8787/health
+# POST /analyze       {"track_id":"t1","file_path":"C:/.../assets/human_vocal.wav"}
+# POST /parse_intent  {"text":"只把人声第 3 小节高音修准","project_state":{...}}
+# POST /execute_plan  {"plan_id":"p1","file_path":"...","parameters":{...}}
 
-# 3. 在 Electron 壳中运行（开发模式）
-npm run electron:dev
+# 3. baseline / 稳定性 / 兜底脚本
+./.venv/Scripts/python.exe scripts/baseline.py assets/human_vocal.wav
+./.venv/Scripts/python.exe scripts/stability.py
+./.venv/Scripts/python.exe scripts/make_fallback.py assets/human_vocal.wav
 ```
 
-运行时成本预估：
+前端层（React + Electron 壳）为规划中的后续开发，接口契约已定，见《后端任务清单.md》。
 
-- Demucs htdemucs_ft：建议 8GB+ 显存，无 GPU 可用 CPU（慢）
-- MusicGen small：约 3GB 显存；medium 约 8GB；large 约 16GB
-- 无 GPU 机器演示方案：预生成素材缓存，或现场用 CPU 小模型出短片段
+### 当前 MVP 运行时成本
+
+- 依赖仅 `librosa/soundfile/numpy/scipy/flask`，**无 torch / 无 GPU 需求**（选型底线）
+- 30 秒素材全链路 ≤ 7s（预算 60s）；渲染超预算自动降采样 16kHz 兜底
+- LLM 意图解析为可选增强：配置 `OPENAI_API_KEY` / `DEEPSEEK_API_KEY` 走真通道，不配则自动走规则模板（断网可用）
 
 ## 目录结构（规划）
 
