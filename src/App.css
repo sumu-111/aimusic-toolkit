@@ -165,38 +165,8 @@
 
 .pane-center {
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 16px;
-}
-
-.pane-center.is-dragging .drop-zone {
-  border-color: var(--accent);
-  background: #211b3b;
-}
-
-.drop-zone {
-  min-height: 128px;
-  display: grid;
-  gap: 8px;
-  place-items: center;
-  border: 1px dashed #4b5368;
-  border-radius: 8px;
-  color: var(--text-strong);
-  background: var(--panel-strong);
-  font: inherit;
-  cursor: pointer;
-}
-
-.drop-zone:hover {
-  border-color: var(--accent);
-}
-
-.drop-zone strong {
-  font-size: 18px;
-}
-
-.drop-zone span {
-  color: var(--muted);
 }
 
 .track-grid {
@@ -207,7 +177,6 @@
 
 .track-grid div,
 .analysis-strip,
-.error-line,
 .side-section {
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -222,7 +191,6 @@
 
 .track-grid span,
 .analysis-strip span:first-child,
-.error-line span,
 .side-section small {
   color: var(--muted);
 }
@@ -234,61 +202,12 @@
   white-space: nowrap;
 }
 
-.waveform-placeholder {
-  min-height: 300px;
-  display: grid;
-  gap: 8px;
-  align-content: center;
-  padding: 28px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel-strong);
-}
-
-.wave-line {
-  height: 48px;
-  border-radius: 8px;
-  background:
-    linear-gradient(
-      90deg,
-      transparent 0 3%,
-      rgba(124, 92, 255, 0.72) 3% 4%,
-      transparent 4% 7%
-    ),
-    linear-gradient(
-      180deg,
-      transparent 42%,
-      rgba(124, 92, 255, 0.82) 42% 58%,
-      transparent 58%
-    );
-  background-size: 28px 100%, 100% 100%;
-}
-
-.wave-line.short {
-  opacity: 0.58;
-  transform: scaleY(0.72);
-}
-
 .analysis-strip {
   min-height: 44px;
   display: flex;
   align-items: center;
   gap: 18px;
   padding: 0 14px;
-}
-
-.error-line {
-  min-height: 44px;
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  gap: 12px;
-  align-items: center;
-  padding: 0 14px;
-  color: #ffb5b5;
-}
-
-.error-line strong {
-  color: #ff8a8a;
 }
 
 .pane-right {

@@ -7,6 +7,7 @@ import {
 } from 'react'
 import './App.css'
 import { FlowCanvas } from './components/canvas/FlowCanvas'
+import { WaveformPanel } from './components/waveform/WaveformPanel'
 import { useProjectStore, type ProjectStatus } from './store/useProjectStore'
 
 const COPY = {
@@ -57,18 +58,6 @@ const STATUS_TONE: Record<ProjectStatus, string> = {
   executing: 'busy',
   rendered: 'done',
   reverted: 'pending',
-}
-
-function formatDuration(durationSec?: number) {
-  if (!Number.isFinite(durationSec)) {
-    return '--'
-  }
-
-  const safeDuration = durationSec ?? 0
-  const minutes = Math.floor(safeDuration / 60)
-  const seconds = Math.floor(safeDuration % 60)
-
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
 function makeTrackId(file: File) {
@@ -125,12 +114,7 @@ function App() {
   const objectUrlRef = useRef<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
-  const track = useProjectStore((state) => state.track)
-  const analysis = useProjectStore((state) => state.analysis)
-  const selectedBarIndex = useProjectStore((state) => state.selectedBarIndex)
   const status = useProjectStore((state) => state.status)
-  const error = useProjectStore((state) => state.error)
-  const elapsedMs = useProjectStore((state) => state.elapsedMs)
   const inspectorNode = useProjectStore((state) => state.inspectorNode)
   const setTrack = useProjectStore((state) => state.setTrack)
   const revert = useProjectStore((state) => state.revert)
@@ -168,7 +152,6 @@ function App() {
     })
 
     setImportMessage(null)
-    void useProjectStore.getState().runAnalyze()
   }
 
   function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
@@ -271,55 +254,10 @@ function App() {
             <small>{COPY.minViewport}</small>
           </div>
 
-          <button
-            className="drop-zone"
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <strong>{track ? COPY.currentTrack : COPY.dropHint}</strong>
-            <span>{track?.file_name ?? COPY.waitingTrack}</span>
-          </button>
-
-          <div className="track-grid">
-            <div>
-              <span>{COPY.fileName}</span>
-              <strong>{track?.file_name ?? '--'}</strong>
-            </div>
-            <div>
-              <span>{COPY.duration}</span>
-              <strong>{formatDuration(track?.duration_sec)}</strong>
-            </div>
-            <div>
-              <span>{COPY.sampleRate}</span>
-              <strong>
-                {track?.sample_rate ? `${track.sample_rate} Hz` : '--'}
-              </strong>
-            </div>
-            <div>
-              <span>{COPY.selectedBar}</span>
-              <strong>{selectedBarIndex ?? '--'}</strong>
-            </div>
-          </div>
-
-          <div className="waveform-placeholder">
-            <div className="wave-line" />
-            <div className="wave-line short" />
-            <div className="wave-line" />
-          </div>
-
-          <div className="analysis-strip">
-            <span>bars {analysis?.bars.length ?? 0}</span>
-            <span>pitch {analysis?.pitch.length ?? 0}</span>
-            <span>{elapsedMs ? `${elapsedMs} ms` : '--'}</span>
-          </div>
-
-          {(error || importMessage) && (
-            <div className="error-line">
-              <span>{COPY.error}</span>
-              <strong>{error?.error_code ?? importMessage}</strong>
-              <span>{error?.message ?? ''}</span>
-            </div>
-          )}
+          <WaveformPanel
+            importMessage={importMessage}
+            onImportClick={() => fileInputRef.current?.click()}
+          />
         </section>
 
         <aside

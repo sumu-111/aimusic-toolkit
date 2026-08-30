@@ -4,6 +4,7 @@ import {
   ErrorCode,
   type AnalysisResult,
   type ApiError,
+  type Bar,
   type HistoryItem,
   type Plan,
   type ProjectState,
@@ -54,6 +55,11 @@ type ProjectStateSlice = {
   setTrack: (track: TrackSummary) => void
   runAnalyze: () => Promise<void>
   selectBar: (index: number | null) => void
+  updateBarRange: (
+    index: number,
+    range: Pick<Bar, 'start_sec' | 'end_sec'>,
+  ) => void
+  selectWholeTrackRange: () => void
   runParseIntent: (text: string) => Promise<void>
   updatePlanParam: <K extends keyof Plan>(key: K, value: Plan[K]) => void
   confirmPlan: () => Promise<void>
@@ -218,6 +224,87 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     }
 
     set({ selectedBarIndex: index })
+  },
+
+  updateBarRange: (index, range) => {
+    const state = get()
+
+    if (!state.analysis) {
+      warnIllegal('updateBarRange', state.status)
+      return
+    }
+
+    const fallbackEnd = state.analysis.bars.reduce(
+      (max, bar) => Math.max(max, bar.end_sec),
+      0,
+    )
+    const maxEnd =
+      (state.track?.duration_sec ?? fallbackEnd) || Math.max(range.end_sec, 0.01)
+    const start = Math.max(0, Math.min(range.start_sec, maxEnd - 0.01))
+    const end = Math.max(start + 0.01, Math.min(range.end_sec, maxEnd))
+    const analysis = {
+      ...state.analysis,
+      bars: state.analysis.bars.map((bar) =>
+        bar.index === index
+          ? {
+              ...bar,
+              start_sec: start,
+              end_sec: end,
+            }
+          : bar,
+      ),
+    }
+    let plan = state.plan
+
+    if (
+      plan &&
+      state.selectedBarIndex === index &&
+      (state.status === 'plan_pending' || state.status === 'reverted')
+    ) {
+      plan = {
+        ...plan,
+        start_sec: start,
+        end_sec: end,
+      }
+    }
+
+    set({ analysis, selectedBarIndex: index, plan })
+  },
+
+  selectWholeTrackRange: () => {
+    const state = get()
+
+    if (!state.track) {
+      warnIllegal('selectWholeTrackRange', state.status)
+      return
+    }
+
+    const analysisEnd =
+      state.analysis?.bars.reduce(
+        (max, bar) => Math.max(max, bar.end_sec),
+        0,
+      ) ?? 0
+    const end = (state.track.duration_sec ?? analysisEnd) || 30
+
+    set({
+      analysis: {
+        bars: [
+          {
+            index: 0,
+            start_sec: 0,
+            end_sec: end,
+          },
+        ],
+        pitch: state.analysis?.pitch ?? [],
+      },
+      selectedBarIndex: 0,
+      plan: null,
+      render: null,
+      error: null,
+      status: 'analyzed',
+      playbackSource: 'original',
+      elapsedMs: 0,
+    })
   },
 
   runParseIntent: async (text) => {
