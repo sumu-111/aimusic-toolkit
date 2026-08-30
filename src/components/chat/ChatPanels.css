@@ -1,0 +1,273 @@
+.side-section.chat-panel,
+.side-section.plan-panel {
+  min-height: 0;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  overflow: auto;
+}
+
+.side-section.chat-panel {
+  grid-template-rows: auto minmax(92px, 1fr) auto auto auto;
+}
+
+.side-section.plan-panel {
+  grid-template-rows: auto auto auto auto auto auto;
+}
+
+.side-section.plan-panel.empty {
+  align-content: space-between;
+}
+
+.panel-title-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-title-row span {
+  flex: 0 0 auto;
+}
+
+.panel-title-row small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preset-button {
+  min-width: 0;
+  overflow: hidden;
+  padding: 6px 9px;
+  border: 1px solid #394154;
+  border-radius: 8px;
+  color: #d8def0;
+  background: #202633;
+  font: inherit;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.preset-button:hover {
+  border-color: var(--accent);
+  background: #272d3d;
+}
+
+.chat-panel textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: none;
+  border: 1px solid #32394a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text-strong);
+  background: #11141b;
+  font: inherit;
+  line-height: 1.45;
+}
+
+.chat-panel textarea:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.chat-actions,
+.plan-actions,
+.chat-error-card div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.chat-actions small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-actions button,
+.chat-error-card button,
+.plan-actions button {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid #3a4256;
+  border-radius: 8px;
+  color: var(--text-strong);
+  background: #1b202b;
+  font: inherit;
+  cursor: pointer;
+}
+
+.chat-actions button:hover,
+.chat-error-card button:hover,
+.plan-actions button:hover {
+  border-color: var(--accent);
+  background: #242a38;
+}
+
+.chat-actions button:disabled,
+.chat-error-card button:disabled,
+.plan-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.parse-skeleton {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #344257;
+  border-radius: 8px;
+  background: #121923;
+}
+
+.parse-skeleton div {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(74, 144, 226, 0.14),
+      rgba(74, 144, 226, 0.42),
+      rgba(74, 144, 226, 0.14)
+    );
+  background-size: 220% 100%;
+  animation: parseSkeleton 1.1s ease-in-out infinite;
+}
+
+.parse-skeleton div:nth-child(2) {
+  width: 72%;
+}
+
+.parse-skeleton strong {
+  color: #b9d9ff;
+  font-size: 12px;
+}
+
+.chat-error-card {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #6a3034;
+  border-radius: 8px;
+  color: #ffd2d2;
+  background: #251519;
+}
+
+.chat-error-card span {
+  color: #ffb5b5;
+  font-size: 12px;
+}
+
+.chat-error-card strong,
+.chat-error-card p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-error-card strong {
+  color: #ff8a8a;
+}
+
+.operation-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #303746;
+  border-radius: 8px;
+  background: #11141b;
+}
+
+.operation-row span {
+  color: var(--muted);
+}
+
+.operation-row strong {
+  color: var(--text-strong);
+}
+
+.plan-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.plan-fields label,
+.strength-field {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.plan-fields span,
+.strength-field span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.plan-fields input,
+.plan-fields select {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid #32394a;
+  border-radius: 8px;
+  padding: 0 10px;
+  color: var(--text-strong);
+  background: #11141b;
+  font: inherit;
+}
+
+.plan-fields input:focus,
+.plan-fields select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.strength-field {
+  grid-template-columns: 66px minmax(0, 1fr) 44px;
+  align-items: center;
+}
+
+.strength-field input {
+  accent-color: var(--accent);
+}
+
+.strength-field output {
+  color: var(--text-strong);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-violations {
+  display: grid;
+  gap: 4px;
+  color: #ff9b9b;
+  font-size: 12px;
+}
+
+.plan-actions {
+  justify-content: flex-start;
+}
+
+@keyframes parseSkeleton {
+  from {
+    background-position-x: 100%;
+  }
+
+  to {
+    background-position-x: -120%;
+  }
+}

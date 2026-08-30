@@ -60,10 +60,12 @@ type ProjectStateSlice = {
     range: Pick<Bar, 'start_sec' | 'end_sec'>,
   ) => void
   selectWholeTrackRange: () => void
+  applyRuleTemplatePlan: (text: string) => void
   runParseIntent: (text: string) => Promise<void>
   updatePlanParam: <K extends keyof Plan>(key: K, value: Plan[K]) => void
   confirmPlan: () => Promise<void>
   cancelExecute: () => Promise<void>
+  cancelPlan: () => void
   revert: () => void
   reset: () => void
 }
@@ -129,6 +131,36 @@ function createHistoryItem(
     render,
     status,
     error,
+  }
+}
+
+function getSelectedBar(state: ProjectStateSlice) {
+  return (
+    state.analysis?.bars.find((bar) => bar.index === state.selectedBarIndex) ??
+    state.analysis?.bars[2] ??
+    state.analysis?.bars[0] ??
+    null
+  )
+}
+
+function createLocalPlan(state: ProjectStateSlice): Plan | null {
+  if (!state.track) {
+    return null
+  }
+
+  const selectedBar = getSelectedBar(state)
+  const fallbackEnd = state.track.duration_sec ?? selectedBar?.end_sec ?? 15
+
+  return {
+    plan_id:
+      globalThis.crypto?.randomUUID?.() ?? `local-plan-${Date.now()}`,
+    op: 'correct_pitch',
+    track: state.track.track_id,
+    start_sec: selectedBar?.start_sec ?? 0,
+    end_sec: selectedBar?.end_sec ?? fallbackEnd,
+    mode: 'scale',
+    scale: 'C_major',
+    strength: 0.8,
   }
 }
 
@@ -258,7 +290,6 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
 
     if (
       plan &&
-      state.selectedBarIndex === index &&
       (state.status === 'plan_pending' || state.status === 'reverted')
     ) {
       plan = {
@@ -302,6 +333,25 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       render: null,
       error: null,
       status: 'analyzed',
+      playbackSource: 'original',
+      elapsedMs: 0,
+    })
+  },
+
+  applyRuleTemplatePlan: (_text) => {
+    const state = get()
+    const plan = createLocalPlan(state)
+
+    if (!plan) {
+      warnIllegal('applyRuleTemplatePlan', state.status)
+      return
+    }
+
+    set({
+      plan,
+      render: null,
+      error: null,
+      status: 'plan_pending',
       playbackSource: 'original',
       elapsedMs: 0,
     })
@@ -359,7 +409,30 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       return
     }
 
-    set({ plan: { ...state.plan, [key]: value } })
+    const plan = { ...state.plan, [key]: value }
+    let analysis = state.analysis
+
+    if (
+      analysis &&
+      state.selectedBarIndex !== null &&
+      (key === 'start_sec' || key === 'end_sec') &&
+      plan.end_sec > plan.start_sec
+    ) {
+      analysis = {
+        ...analysis,
+        bars: analysis.bars.map((bar) =>
+          bar.index === state.selectedBarIndex
+            ? {
+                ...bar,
+                start_sec: plan.start_sec,
+                end_sec: plan.end_sec,
+              }
+            : bar,
+        ),
+      }
+    }
+
+    set({ analysis, plan })
   },
 
   confirmPlan: async () => {
@@ -439,6 +512,24 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
           }
         : result.error,
       playbackSource: 'original',
+    })
+  },
+
+  cancelPlan: () => {
+    const state = get()
+
+    if (state.status !== 'plan_pending' && state.status !== 'reverted') {
+      warnIllegal('cancelPlan', state.status)
+      return
+    }
+
+    set({
+      plan: null,
+      render: null,
+      error: null,
+      status: 'idle',
+      playbackSource: 'original',
+      elapsedMs: 0,
     })
   },
 

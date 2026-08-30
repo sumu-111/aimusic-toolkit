@@ -1,12 +1,15 @@
 import {
   type ChangeEvent,
   type DragEvent,
+  useCallback,
   useEffect,
   useRef,
   useState,
 } from 'react'
 import './App.css'
 import { FlowCanvas } from './components/canvas/FlowCanvas'
+import { ChatInput } from './components/chat/ChatInput'
+import { PlanPanel } from './components/chat/PlanPanel'
 import { WaveformPanel } from './components/waveform/WaveformPanel'
 import { useProjectStore, type ProjectStatus } from './store/useProjectStore'
 
@@ -112,6 +115,7 @@ function App() {
   const hasHostApi = typeof window !== 'undefined' && Boolean(window.api)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const objectUrlRef = useRef<string | null>(null)
+  const planPanelRef = useRef<HTMLElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const status = useProjectStore((state) => state.status)
@@ -193,6 +197,13 @@ function App() {
     setIsDragging(false)
   }
 
+  const scrollToPlan = useCallback(() => {
+    planPanelRef.current?.scrollIntoView({
+      block: 'nearest',
+      behavior: 'smooth',
+    })
+  }, [])
+
   return (
     <main className="app-shell">
       <input
@@ -270,14 +281,8 @@ function App() {
               <pre>{JSON.stringify(inspectorNode.metadata, null, 2)}</pre>
             </details>
           )}
-          <div className="side-section">
-            <span>{COPY.chat}</span>
-            <small>{COPY.placeholder}</small>
-          </div>
-          <div className="side-section">
-            <span>{COPY.plan}</span>
-            <small>{COPY.placeholder}</small>
-          </div>
+          <ChatInput onPlanReady={scrollToPlan} />
+          <PlanPanel ref={planPanelRef} />
           <div className="side-section">
             <span>{COPY.curve}</span>
             <small>{COPY.placeholder}</small>
