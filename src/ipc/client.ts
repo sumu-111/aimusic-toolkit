@@ -8,8 +8,10 @@ import {
   type ExecutePlanReq,
   type ParseIntentReq,
   type Plan,
+  type ProjectFile,
   type RenderResult,
   type Result,
+  type SaveProjectResult,
 } from '../types/contract'
 import {
   mockAnalyze,
@@ -17,6 +19,8 @@ import {
   mockExecutePlan,
   mockParseIntent,
 } from './mock'
+
+const PROJECT_STORAGE_KEY = 'ai-music-workbench.project'
 
 function isResult<T>(value: unknown): value is Result<T> {
   return (
@@ -33,10 +37,52 @@ function useMockApi() {
   return env?.VITE_MOCK === '1' || typeof window === 'undefined' || !window.api
 }
 
+function hasHostApi() {
+  return typeof window !== 'undefined' && Boolean(window.api)
+}
+
 function toError(errorCode: ErrorCodeValue, cause: unknown) {
   return {
     error_code: errorCode,
     message: cause instanceof Error ? cause.message : String(cause),
+  }
+}
+
+function ok<T>(data: T): Result<T> {
+  return { ok: true, data }
+}
+
+function readProjectFromStorage(): Result<ProjectFile | null> {
+  if (typeof window === 'undefined') {
+    return ok(null)
+  }
+
+  try {
+    const rawProject = window.localStorage.getItem(PROJECT_STORAGE_KEY)
+
+    return ok(rawProject ? (JSON.parse(rawProject) as ProjectFile) : null)
+  } catch (error) {
+    return {
+      ok: false,
+      error: toError(ErrorCode.PRECHECK_FAILED, error),
+    }
+  }
+}
+
+function saveProjectToStorage(project: ProjectFile): Result<SaveProjectResult> {
+  if (typeof window === 'undefined') {
+    return ok({ saved: true })
+  }
+
+  try {
+    window.localStorage.setItem(PROJECT_STORAGE_KEY, JSON.stringify(project))
+
+    return ok({ saved: true })
+  } catch (error) {
+    return {
+      ok: false,
+      error: toError(ErrorCode.PRECHECK_FAILED, error),
+    }
   }
 }
 
@@ -111,4 +157,62 @@ export async function cancel(): Promise<Result<CancelResult>> {
     () => mockCancel(),
     ErrorCode.CANCELLED,
   )
+}
+
+export async function saveProject(
+  project: ProjectFile,
+): Promise<Result<SaveProjectResult>> {
+  const start = performance.now()
+
+  try {
+    const result = hasHostApi()
+      ? await window.api!.saveProject(project)
+      : saveProjectToStorage(project)
+
+    return isResult<SaveProjectResult>(result)
+      ? result
+      : {
+          ok: false,
+          error: {
+            error_code: ErrorCode.PRECHECK_FAILED,
+            message: 'Invalid response from save_project',
+          },
+        }
+  } catch (error) {
+    return {
+      ok: false,
+      error: toError(ErrorCode.PRECHECK_FAILED, error),
+    }
+  } finally {
+    const cost = Math.round(performance.now() - start)
+    console.info(`[ipc] channel=${CHANNELS.save_project} cost=${cost}ms`)
+  }
+}
+
+export async function loadProject(): Promise<Result<ProjectFile | null>> {
+  const start = performance.now()
+
+  try {
+    const result = hasHostApi()
+      ? await window.api!.loadProject()
+      : readProjectFromStorage()
+
+    return isResult<ProjectFile | null>(result)
+      ? result
+      : {
+          ok: false,
+          error: {
+            error_code: ErrorCode.PRECHECK_FAILED,
+            message: 'Invalid response from load_project',
+          },
+        }
+  } catch (error) {
+    return {
+      ok: false,
+      error: toError(ErrorCode.PRECHECK_FAILED, error),
+    }
+  } finally {
+    const cost = Math.round(performance.now() - start)
+    console.info(`[ipc] channel=${CHANNELS.load_project} cost=${cost}ms`)
+  }
 }

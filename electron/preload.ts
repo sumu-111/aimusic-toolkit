@@ -7,8 +7,10 @@ import {
   type ExecutePlanReq,
   type ParseIntentReq,
   type Plan,
+  type ProjectFile,
   type RenderResult,
   type Result,
+  type SaveProjectResult,
   type WorkerEvent,
 } from '../src/types/contract.js'
 
@@ -24,6 +26,14 @@ const api = {
       Result<RenderResult>
     >,
   cancel: () => ipcRenderer.invoke('cancel') as Promise<Result<CancelResult>>,
+  saveProject: (project: ProjectFile) =>
+    ipcRenderer.invoke(CHANNELS.save_project, project) as Promise<
+      Result<SaveProjectResult>
+    >,
+  loadProject: () =>
+    ipcRenderer.invoke(CHANNELS.load_project) as Promise<
+      Result<ProjectFile | null>
+    >,
   onWorkerEvent: (cb: (event: WorkerEvent) => void) => {
     const listener = (_event: IpcRendererEvent, event: WorkerEvent) => cb(event)
 

@@ -1,0 +1,126 @@
+.side-section.history-panel {
+  min-height: 0;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  overflow: auto;
+}
+
+.history-panel .panel-title-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.history-panel .panel-title-row span {
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.history-panel .panel-title-row small,
+.history-panel > small {
+  color: var(--muted);
+}
+
+.history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.history-item {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #303746;
+  border-radius: 8px;
+  color: var(--text);
+  background: #11141b;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.history-item:hover {
+  border-color: var(--accent);
+  background: #171b26;
+}
+
+.history-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.history-item time {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-status {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.history-status.rendered {
+  border-color: #30a66a;
+  color: #a8f3ca;
+  background: #123421;
+}
+
+.history-status.reverted {
+  border-color: #d6a835;
+  color: #ffe2a3;
+  background: #3c2e0f;
+}
+
+.history-status.failed {
+  border-color: #e65252;
+  color: #ffb5b5;
+  background: #3a171b;
+}
+
+.history-item strong {
+  overflow: hidden;
+  color: var(--text-strong);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-item dl {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+}
+
+.history-item dl div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.history-item dt,
+.history-item dd {
+  margin: 0;
+}
+
+.history-item dt {
+  color: var(--muted);
+}
+
+.history-item dd {
+  overflow: hidden;
+  color: #d7dcea;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

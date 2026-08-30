@@ -10,10 +10,16 @@ import './App.css'
 import { FlowCanvas } from './components/canvas/FlowCanvas'
 import { ChatInput } from './components/chat/ChatInput'
 import { PlanPanel } from './components/chat/PlanPanel'
+import { HistoryPanel } from './components/history/HistoryPanel'
 import { CentsChart } from './components/render/CentsChart'
 import { ProgressBar } from './components/render/ProgressBar'
 import { WaveformPanel } from './components/waveform/WaveformPanel'
-import { useProjectStore, type ProjectStatus } from './store/useProjectStore'
+import { loadProject, saveProject } from './ipc/client'
+import {
+  getProjectFileSnapshot,
+  useProjectStore,
+  type ProjectStatus,
+} from './store/useProjectStore'
 
 const COPY = {
   appName: 'AI Music Workbench',
@@ -24,22 +30,7 @@ const COPY = {
   electronHost: 'Electron Host',
   canvas: '\u753b\u5e03',
   waveform: '\u6ce2\u5f62\u533a',
-  dropHint: '\u70b9\u51fb\u6216\u62d6\u5165 WAV',
-  waitingTrack: '\u5f85\u5bfc\u5165\u97f3\u9891',
-  currentTrack: '\u5f53\u524d\u97f3\u9891',
-  fileName: '\u6587\u4ef6\u540d',
-  duration: '\u65f6\u957f',
-  sampleRate: '\u91c7\u6837\u7387',
-  selectedBar: '\u9009\u4e2d\u5c0f\u8282',
-  error: '\u9519\u8bef',
-  chat: '\u5bf9\u8bdd',
-  plan: '\u8ba1\u5212',
-  curve: '\u66f2\u7ebf',
-  history: '\u5386\u53f2',
-  placeholder: '\u5360\u4f4d',
-  flowImport: '\u5bfc\u5165',
-  flowAnalyze: '\u5206\u6790',
-  flowFix: '\u4fee\u97f3',
+  fullRun: '\u672c\u6b21\u5168\u94fe\u8def',
   minViewport: '1400 px',
 }
 
@@ -113,6 +104,10 @@ function readDurationSec(url: string) {
   })
 }
 
+function formatFullRun(elapsedMs: number) {
+  return elapsedMs ? `${(elapsedMs / 1000).toFixed(1)} \u79d2` : '--'
+}
+
 function App() {
   const hasHostApi = typeof window !== 'undefined' && Boolean(window.api)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -121,9 +116,76 @@ function App() {
   const [isDragging, setIsDragging] = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const status = useProjectStore((state) => state.status)
+  const lastFullRunMs = useProjectStore((state) => state.lastFullRunMs)
+  const restoreNotice = useProjectStore((state) => state.restoreNotice)
   const inspectorNode = useProjectStore((state) => state.inspectorNode)
   const setTrack = useProjectStore((state) => state.setTrack)
   const revert = useProjectStore((state) => state.revert)
+
+  useEffect(() => {
+    let cancelled = false
+
+    void loadProject().then((result) => {
+      if (cancelled) {
+        return
+      }
+
+      if (result.ok && result.data) {
+        useProjectStore.getState().restoreProject(result.data)
+        return
+      }
+
+      if (!result.ok) {
+        console.warn('[project] load failed', result.error)
+      }
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let timer: number | undefined
+
+    const unsubscribe = useProjectStore.subscribe((state, previousState) => {
+      const shouldSave =
+        state.status !== previousState.status ||
+        state.analysis !== previousState.analysis ||
+        state.history !== previousState.history ||
+        state.nodePositions !== previousState.nodePositions ||
+        state.plan !== previousState.plan ||
+        state.render !== previousState.render ||
+        state.selectedBarIndex !== previousState.selectedBarIndex
+
+      if (!shouldSave) {
+        return
+      }
+
+      if (timer) {
+        window.clearTimeout(timer)
+      }
+
+      timer = window.setTimeout(() => {
+        void saveProject(getProjectFileSnapshot()).then((result) => {
+          if (result.ok) {
+            console.info('[project] autosaved', result.data.path ?? 'localStorage')
+            return
+          }
+
+          console.warn('[project] autosave failed', result.error)
+        })
+      }, 1000)
+    })
+
+    return () => {
+      if (timer) {
+        window.clearTimeout(timer)
+      }
+
+      unsubscribe()
+    }
+  }, [])
 
   useEffect(() => {
     return () => {
@@ -134,6 +196,8 @@ function App() {
   }, [])
 
   async function importFile(file: File) {
+    const importStart = performance.now()
+
     if (!isWavFile(file)) {
       setImportMessage('WAV only')
       console.warn('[app] import ignored: file is not wav', file)
@@ -148,14 +212,17 @@ function App() {
     objectUrlRef.current = url
     const durationSec = await readDurationSec(url)
 
-    setTrack({
-      track_id: makeTrackId(file),
-      file_path: file.name,
-      file_name: file.name,
-      duration_sec: durationSec,
-      sample_rate: 44100,
-      url,
-    })
+    setTrack(
+      {
+        track_id: makeTrackId(file),
+        file_path: file.name,
+        file_name: file.name,
+        duration_sec: durationSec,
+        sample_rate: 44100,
+        url,
+      },
+      Math.round(performance.now() - importStart),
+    )
 
     setImportMessage(null)
   }
@@ -206,6 +273,17 @@ function App() {
     })
   }, [])
 
+  function handleSave() {
+    void saveProject(getProjectFileSnapshot()).then((result) => {
+      if (result.ok) {
+        console.info('[project] saved', result.data.path ?? 'localStorage')
+        return
+      }
+
+      console.warn('[project] save failed', result.error)
+    })
+  }
+
   return (
     <main className="app-shell">
       <input
@@ -229,10 +307,7 @@ function App() {
           <span className={`status-badge ${STATUS_TONE[status]}`}>
             {STATUS_LABELS[status]}
           </span>
-          <button
-            type="button"
-            onClick={() => console.info('[app] save placeholder')}
-          >
+          <button type="button" onClick={handleSave}>
             {COPY.save}
           </button>
           <button type="button" onClick={revert}>
@@ -243,6 +318,10 @@ function App() {
         <div className="runtime">
           <span>{hasHostApi ? COPY.electronHost : COPY.browserFallback}</span>
           <span>Mock {import.meta.env.VITE_MOCK ?? 'unset'}</span>
+          <span>
+            {COPY.fullRun} {formatFullRun(lastFullRunMs)}
+          </span>
+          {restoreNotice && <span>{restoreNotice}</span>}
         </div>
       </header>
 
@@ -287,10 +366,7 @@ function App() {
           <PlanPanel ref={planPanelRef} />
           <ProgressBar />
           <CentsChart />
-          <div className="side-section">
-            <span>{COPY.history}</span>
-            <small>{COPY.placeholder}</small>
-          </div>
+          <HistoryPanel />
         </aside>
       </section>
     </main>

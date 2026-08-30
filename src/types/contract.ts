@@ -91,6 +91,11 @@ export type ProjectFile = {
 
 export type Result<T> = { ok: true; data: T } | { ok: false; error: ApiError }
 
+export type SaveProjectResult = {
+  saved: true
+  path?: string
+}
+
 export type CancelResult = {
   cancelled: true
 }
@@ -107,6 +112,8 @@ export const CHANNELS = {
   plan: 'plan',
   execute_plan: 'execute_plan',
   render_result: 'render_result',
+  save_project: 'save_project',
+  load_project: 'load_project',
 } as const
 
 export const ErrorCode = {

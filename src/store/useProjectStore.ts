@@ -7,6 +7,7 @@ import {
   type Bar,
   type HistoryItem,
   type Plan,
+  type ProjectFile,
   type ProjectState,
   type RenderResult,
   type TrackSummary,
@@ -49,10 +50,16 @@ type ProjectStateSlice = {
   status: ProjectStatus
   error: ApiError | null
   elapsedMs: number
+  lastFullRunMs: number
+  lastIntentText: string
+  restoreNotice: string | null
+  workflowElapsedMs: number
   playbackSource: PlaybackSource
   setNodePosition: (id: CanvasNodeId, position: NodePosition) => void
   selectInspectorNode: (node: InspectorNode | null) => void
-  setTrack: (track: TrackSummary) => void
+  setTrack: (track: TrackSummary, importElapsedMs?: number) => void
+  restoreProject: (project: ProjectFile) => void
+  restoreHistoryItem: (id: string) => void
   runAnalyze: () => Promise<void>
   selectBar: (index: number | null) => void
   updateBarRange: (
@@ -86,8 +93,20 @@ const initialState = {
   status: 'idle' as ProjectStatus,
   error: null,
   elapsedMs: 0,
+  lastFullRunMs: 0,
+  lastIntentText: '',
+  restoreNotice: null,
+  workflowElapsedMs: 0,
   playbackSource: 'original' as PlaybackSource,
 }
+
+const PROJECT_FILE_VERSION = '1.0'
+const RESTORE_NOTICE = '\u8bf7\u91cd\u65b0\u5bfc\u5165\u97f3\u9891'
+const CANVAS_NODE_IDS: CanvasNodeId[] = [
+  'audio-import',
+  'analysis',
+  'pitch-fix',
+]
 
 let analyzeRunId = 0
 let parseRunId = 0
@@ -99,6 +118,10 @@ function warnIllegal(action: string, status: ProjectStatus) {
 
 function elapsedSince(start: number) {
   return Math.round(performance.now() - start)
+}
+
+function logTiming(label: string, elapsedMs: number) {
+  console.info(`[timing] ${label}=${elapsedMs}ms`)
 }
 
 function createProjectState(state: ProjectStateSlice): ProjectState {
@@ -114,6 +137,72 @@ function createProjectState(state: ProjectStateSlice): ProjectState {
       position,
     })),
   }
+}
+
+function createProjectFile(state: ProjectStateSlice): ProjectFile {
+  return {
+    nodes: Object.entries(state.nodePositions).map(([id, position]) => ({
+      id,
+      position,
+    })),
+    analysis: state.analysis,
+    history: state.history,
+    version: PROJECT_FILE_VERSION,
+  }
+}
+
+function isCanvasNodeId(value: unknown): value is CanvasNodeId {
+  return (
+    typeof value === 'string' &&
+    CANVAS_NODE_IDS.includes(value as CanvasNodeId)
+  )
+}
+
+function isNodePosition(value: unknown): value is NodePosition {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as { x?: unknown }).x === 'number' &&
+    typeof (value as { y?: unknown }).y === 'number'
+  )
+}
+
+function readNodePositions(nodes: unknown[]): Record<CanvasNodeId, NodePosition> {
+  const positions = { ...initialState.nodePositions }
+
+  for (const node of nodes) {
+    if (typeof node !== 'object' || node === null) {
+      continue
+    }
+
+    const { id, position } = node as {
+      id?: unknown
+      position?: unknown
+    }
+
+    if (isCanvasNodeId(id) && isNodePosition(position)) {
+      positions[id] = position
+    }
+  }
+
+  return positions
+}
+
+function markLatestRenderedHistoryReverted(history: HistoryItem[]) {
+  let marked = false
+
+  return [...history]
+    .reverse()
+    .map((item) => {
+      if (!marked && item.status === 'rendered') {
+        marked = true
+
+        return { ...item, status: 'reverted' as const }
+      }
+
+      return item
+    })
+    .reverse()
 }
 
 function createHistoryItem(
@@ -180,7 +269,9 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     set({ inspectorNode: node })
   },
 
-  setTrack: (track) => {
+  setTrack: (track, importElapsedMs = 0) => {
+    logTiming('import', importElapsedMs)
+
     set({
       track,
       analysis: null,
@@ -189,8 +280,61 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       render: null,
       error: null,
       elapsedMs: 0,
+      lastFullRunMs: 0,
+      restoreNotice: null,
+      workflowElapsedMs: importElapsedMs,
       playbackSource: 'original',
       status: 'idle',
+    })
+  },
+
+  restoreProject: (project) => {
+    const analysis = project.analysis
+
+    set({
+      track: null,
+      analysis,
+      selectedBarIndex:
+        analysis?.bars[2]?.index ?? analysis?.bars[0]?.index ?? null,
+      plan: null,
+      render: null,
+      history: project.history,
+      nodePositions: readNodePositions(project.nodes),
+      error: null,
+      elapsedMs: 0,
+      lastFullRunMs: 0,
+      restoreNotice: analysis || project.history.length ? RESTORE_NOTICE : null,
+      workflowElapsedMs: 0,
+      playbackSource: 'original',
+      status: analysis ? 'analyzed' : 'idle',
+    })
+  },
+
+  restoreHistoryItem: (id) => {
+    const state = get()
+    const item = state.history.find((historyItem) => historyItem.id === id)
+
+    if (!item) {
+      warnIllegal('restoreHistoryItem', state.status)
+      return
+    }
+
+    const selectedBarIndex =
+      state.analysis?.bars.find(
+        (bar) =>
+          item.plan.start_sec >= bar.start_sec &&
+          item.plan.end_sec <= bar.end_sec,
+      )?.index ?? state.selectedBarIndex
+
+    set({
+      plan: item.plan,
+      render: null,
+      selectedBarIndex,
+      error: null,
+      elapsedMs: 0,
+      workflowElapsedMs: 0,
+      playbackSource: 'original',
+      status: 'plan_pending',
     })
   },
 
@@ -229,13 +373,18 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       return
     }
 
+    const elapsedMs = elapsedSince(start)
+    const workflowElapsedMs = state.workflowElapsedMs + elapsedMs
+    logTiming('analyze', elapsedMs)
+
     if (result.ok) {
       set({
         analysis: result.data,
         selectedBarIndex: result.data.bars[2]?.index ?? result.data.bars[0]?.index ?? null,
         status: 'analyzed',
         error: null,
-        elapsedMs: elapsedSince(start),
+        elapsedMs,
+        workflowElapsedMs,
       })
       return
     }
@@ -243,7 +392,8 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     set({
       status: 'idle',
       error: result.error,
-      elapsedMs: elapsedSince(start),
+      elapsedMs,
+      workflowElapsedMs,
     })
   },
 
@@ -335,10 +485,11 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       status: 'analyzed',
       playbackSource: 'original',
       elapsedMs: 0,
+      workflowElapsedMs: 0,
     })
   },
 
-  applyRuleTemplatePlan: (_text) => {
+  applyRuleTemplatePlan: (text) => {
     const state = get()
     const plan = createLocalPlan(state)
 
@@ -354,6 +505,7 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       status: 'plan_pending',
       playbackSource: 'original',
       elapsedMs: 0,
+      lastIntentText: text,
     })
   },
 
@@ -368,7 +520,7 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     const runId = ++parseRunId
     const start = performance.now()
 
-    set({ status: 'parsing', error: null, elapsedMs: 0 })
+    set({ status: 'parsing', error: null, elapsedMs: 0, lastIntentText: text })
 
     const result = await parseIntent({
       text,
@@ -379,12 +531,17 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       return
     }
 
+    const elapsedMs = elapsedSince(start)
+    const workflowElapsedMs = state.workflowElapsedMs + elapsedMs
+    logTiming('parse', elapsedMs)
+
     if (result.ok) {
       set({
         plan: result.data,
         status: 'plan_pending',
         error: null,
-        elapsedMs: elapsedSince(start),
+        elapsedMs,
+        workflowElapsedMs,
       })
       return
     }
@@ -392,7 +549,8 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     set({
       status: 'analyzed',
       error: result.error,
-      elapsedMs: elapsedSince(start),
+      elapsedMs,
+      workflowElapsedMs,
     })
   },
 
@@ -467,15 +625,28 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       return
     }
 
+    const elapsedMs = elapsedSince(start)
+    const totalMs = state.workflowElapsedMs + elapsedMs
+    logTiming('render', elapsedMs)
+
     if (result.ok) {
+      logTiming('total', totalMs)
+
       set({
         render: result.data,
         status: 'rendered',
         playbackSource: 'rendered',
-        elapsedMs: elapsedSince(start),
+        elapsedMs,
+        lastFullRunMs: totalMs,
+        workflowElapsedMs: totalMs,
         history: [
           ...get().history,
-          createHistoryItem('confirm plan', state.plan, result.data, 'rendered'),
+          createHistoryItem(
+            state.lastIntentText || 'confirm plan',
+            state.plan,
+            result.data,
+            'rendered',
+          ),
         ],
       })
       return
@@ -484,10 +655,17 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     set({
       status: 'plan_pending',
       error: result.error,
-      elapsedMs: elapsedSince(start),
+      elapsedMs,
+      workflowElapsedMs: totalMs,
       history: [
         ...get().history,
-        createHistoryItem('confirm plan', state.plan, null, 'failed', result.error),
+        createHistoryItem(
+          state.lastIntentText || 'confirm plan',
+          state.plan,
+          null,
+          'failed',
+          result.error,
+        ),
       ],
     })
   },
@@ -530,6 +708,7 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       status: 'idle',
       playbackSource: 'original',
       elapsedMs: 0,
+      workflowElapsedMs: 0,
     })
   },
 
@@ -545,6 +724,7 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       status: 'plan_pending',
       playbackSource: 'original',
       error: null,
+      history: markLatestRenderedHistoryReverted(state.history),
     })
   },
 
@@ -555,3 +735,7 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     set({ ...initialState })
   },
 }))
+
+export function getProjectFileSnapshot() {
+  return createProjectFile(useProjectStore.getState())
+}

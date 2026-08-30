@@ -8,6 +8,7 @@ const COPY = {
   before: '\u4fee\u6b63\u524d',
   after: '\u4fee\u6b63\u540e',
   reduction: '\u4e0b\u964d',
+  revert: '\u56de\u9000',
   seconds: 's',
 }
 
@@ -38,6 +39,8 @@ function createPath(
 
 export function CentsChart() {
   const render = useProjectStore((state) => state.render)
+  const status = useProjectStore((state) => state.status)
+  const revert = useProjectStore((state) => state.revert)
   const chart = useMemo(() => {
     if (!render?.curve.length) {
       return null
@@ -96,11 +99,20 @@ export function CentsChart() {
     <section className="side-section cents-panel">
       <div className="panel-title-row">
         <span>{COPY.title}</span>
-        <small>
-          {chart.minTime.toFixed(2)}
-          {COPY.seconds}-{chart.maxTime.toFixed(2)}
-          {COPY.seconds}
-        </small>
+        <div className="cents-title-actions">
+          <small>
+            {chart.minTime.toFixed(2)}
+            {COPY.seconds}-{chart.maxTime.toFixed(2)}
+            {COPY.seconds}
+          </small>
+          <button
+            type="button"
+            onClick={revert}
+            disabled={status !== 'rendered' && status !== 'reverted'}
+          >
+            {COPY.revert}
+          </button>
+        </div>
       </div>
 
       <div className="cents-metrics">
