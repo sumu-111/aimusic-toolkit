@@ -1,0 +1,79 @@
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+}
+
+.status-panel {
+  width: min(860px, 100%);
+  display: grid;
+  gap: 32px;
+  padding: 40px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.summary {
+  max-width: 620px;
+  color: var(--text);
+}
+
+.runtime-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px 20px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-strong);
+}
+
+.runtime-grid span {
+  color: var(--muted);
+}
+
+.runtime-grid strong {
+  color: var(--text-strong);
+}
+
+.stack-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stack-list span {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-strong);
+  background: var(--chip);
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    padding: 24px;
+  }
+
+  .status-panel {
+    padding: 24px;
+  }
+
+  .runtime-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
