@@ -23,6 +23,19 @@ export type ProjectStatus =
 
 type PlaybackSource = 'original' | 'rendered'
 
+export type CanvasNodeId = 'audio-import' | 'analysis' | 'pitch-fix'
+
+export type NodePosition = {
+  x: number
+  y: number
+}
+
+export type InspectorNode = {
+  id: CanvasNodeId
+  label: string
+  metadata: unknown
+}
+
 type ProjectStateSlice = {
   track: TrackSummary | null
   analysis: AnalysisResult | null
@@ -30,10 +43,14 @@ type ProjectStateSlice = {
   plan: Plan | null
   render: RenderResult | null
   history: HistoryItem[]
+  nodePositions: Record<CanvasNodeId, NodePosition>
+  inspectorNode: InspectorNode | null
   status: ProjectStatus
   error: ApiError | null
   elapsedMs: number
   playbackSource: PlaybackSource
+  setNodePosition: (id: CanvasNodeId, position: NodePosition) => void
+  selectInspectorNode: (node: InspectorNode | null) => void
   setTrack: (track: TrackSummary) => void
   runAnalyze: () => Promise<void>
   selectBar: (index: number | null) => void
@@ -52,6 +69,12 @@ const initialState = {
   plan: null,
   render: null,
   history: [],
+  nodePositions: {
+    'audio-import': { x: 48, y: 36 },
+    analysis: { x: 48, y: 180 },
+    'pitch-fix': { x: 48, y: 324 },
+  },
+  inspectorNode: null,
   status: 'idle' as ProjectStatus,
   error: null,
   elapsedMs: 0,
@@ -78,7 +101,10 @@ function createProjectState(state: ProjectStateSlice): ProjectState {
     plan: state.plan,
     render: state.render,
     history: state.history,
-    nodes: [],
+    nodes: Object.entries(state.nodePositions).map(([id, position]) => ({
+      id,
+      position,
+    })),
   }
 }
 
@@ -102,6 +128,19 @@ function createHistoryItem(
 
 export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
   ...initialState,
+
+  setNodePosition: (id, position) => {
+    set((state) => ({
+      nodePositions: {
+        ...state.nodePositions,
+        [id]: position,
+      },
+    }))
+  },
+
+  selectInspectorNode: (node) => {
+    set({ inspectorNode: node })
+  },
 
   setTrack: (track) => {
     set({
@@ -335,6 +374,6 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     analyzeRunId += 1
     parseRunId += 1
     executeRunId += 1
-    set(initialState)
+    set({ ...initialState })
   },
 }))

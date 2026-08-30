@@ -6,6 +6,7 @@ import {
   useState,
 } from 'react'
 import './App.css'
+import { FlowCanvas } from './components/canvas/FlowCanvas'
 import { useProjectStore, type ProjectStatus } from './store/useProjectStore'
 
 const COPY = {
@@ -130,6 +131,7 @@ function App() {
   const status = useProjectStore((state) => state.status)
   const error = useProjectStore((state) => state.error)
   const elapsedMs = useProjectStore((state) => state.elapsedMs)
+  const inspectorNode = useProjectStore((state) => state.inspectorNode)
   const setTrack = useProjectStore((state) => state.setTrack)
   const revert = useProjectStore((state) => state.revert)
 
@@ -254,11 +256,7 @@ function App() {
             <span>{COPY.canvas}</span>
             <small>320 px</small>
           </div>
-          <div className="flow-placeholder">
-            <div>{COPY.flowImport}</div>
-            <div>{COPY.flowAnalyze}</div>
-            <div>{COPY.flowFix}</div>
-          </div>
+          <FlowCanvas />
         </aside>
 
         <section
@@ -324,7 +322,16 @@ function App() {
           )}
         </section>
 
-        <aside className="pane pane-right" aria-label="Side panels">
+        <aside
+          className={`pane pane-right ${inspectorNode ? 'has-inspector' : ''}`}
+          aria-label="Side panels"
+        >
+          {inspectorNode && (
+            <details className="inspector-panel" open>
+              <summary>Inspector · {inspectorNode.label}</summary>
+              <pre>{JSON.stringify(inspectorNode.metadata, null, 2)}</pre>
+            </details>
+          )}
           <div className="side-section">
             <span>{COPY.chat}</span>
             <small>{COPY.placeholder}</small>

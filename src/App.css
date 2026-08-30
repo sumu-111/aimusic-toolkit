@@ -159,6 +159,10 @@
   background: var(--chip);
 }
 
+.flow-placeholder {
+  display: none;
+}
+
 .pane-center {
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
@@ -291,6 +295,34 @@
   display: grid;
   grid-template-rows: repeat(4, minmax(120px, 1fr));
   gap: 14px;
+}
+
+.pane-right.has-inspector {
+  grid-template-rows: minmax(180px, 240px) repeat(4, minmax(100px, 1fr));
+}
+
+.inspector-panel {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-strong);
+}
+
+.inspector-panel summary {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-strong);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.inspector-panel pre {
+  height: calc(100% - 48px);
+  margin: 0;
+  overflow: auto;
+  padding: 14px;
+  color: #cad1df;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
 }
 
 .side-section {
