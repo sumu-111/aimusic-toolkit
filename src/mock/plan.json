@@ -1,0 +1,10 @@
+{
+  "plan_id": "plan_mock_001",
+  "op": "correct_pitch",
+  "track": "mock-track-001",
+  "start_sec": 4,
+  "end_sec": 6,
+  "mode": "scale",
+  "scale": "C_major",
+  "strength": 0.8
+}

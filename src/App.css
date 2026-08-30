@@ -63,6 +63,49 @@
   background: var(--chip);
 }
 
+.chain-button {
+  width: fit-content;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid #8f7aff;
+  border-radius: 8px;
+  color: #ffffff;
+  background: var(--accent);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chain-button:hover {
+  background: #6d50e6;
+}
+
+.chain-log {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-strong);
+}
+
+.chain-row {
+  display: grid;
+  grid-template-columns: 1fr 100px 64px;
+  gap: 12px;
+  align-items: center;
+  color: var(--text);
+}
+
+.chain-row strong {
+  color: var(--text-strong);
+}
+
+.chain-row em {
+  color: #5adf91;
+  font-style: normal;
+}
+
 @media (max-width: 720px) {
   .app-shell {
     padding: 24px;
