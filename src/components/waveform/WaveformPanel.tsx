@@ -7,6 +7,7 @@ import {
 } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import RegionsPlugin, { type Region } from 'wavesurfer.js/plugins/regions'
+import { ABCompare } from '../render/ABCompare'
 import { useProjectStore } from '../../store/useProjectStore'
 import type { Bar, PitchPoint } from '../../types/contract'
 import './WaveformPanel.css'
@@ -561,6 +562,8 @@ export function WaveformPanel({
         points={pitchPoints}
         selectedBar={selectedBar}
       />
+
+      <ABCompare />
 
       <div className="analysis-strip waveform-analysis-strip">
         <span>

@@ -13,15 +13,6 @@ export default defineConfig(async ({ command, mode }) => {
         ? await electron({
             main: {
               entry: 'electron/main.ts',
-              vite: {
-                build: {
-                  lib: {
-                    entry: 'electron/main.ts',
-                    formats: ['cjs'],
-                    fileName: () => 'main.cjs',
-                  },
-                },
-              },
             },
             preload: {
               input: 'electron/preload.ts',

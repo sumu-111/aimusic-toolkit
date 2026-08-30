@@ -212,12 +212,14 @@
 
 .pane-right {
   display: grid;
-  grid-template-rows: repeat(4, minmax(120px, 1fr));
+  grid-template-rows: repeat(5, minmax(118px, auto));
   gap: 14px;
+  align-content: start;
+  overflow: auto;
 }
 
 .pane-right.has-inspector {
-  grid-template-rows: minmax(180px, 240px) repeat(4, minmax(100px, 1fr));
+  grid-template-rows: minmax(180px, 240px) repeat(5, minmax(110px, auto));
 }
 
 .inspector-panel {

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "dist-electron/main.cjs",
+  "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
     "dev:electron": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue; vite --mode electron\"",

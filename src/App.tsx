@@ -10,6 +10,8 @@ import './App.css'
 import { FlowCanvas } from './components/canvas/FlowCanvas'
 import { ChatInput } from './components/chat/ChatInput'
 import { PlanPanel } from './components/chat/PlanPanel'
+import { CentsChart } from './components/render/CentsChart'
+import { ProgressBar } from './components/render/ProgressBar'
 import { WaveformPanel } from './components/waveform/WaveformPanel'
 import { useProjectStore, type ProjectStatus } from './store/useProjectStore'
 
@@ -283,10 +285,8 @@ function App() {
           )}
           <ChatInput onPlanReady={scrollToPlan} />
           <PlanPanel ref={planPanelRef} />
-          <div className="side-section">
-            <span>{COPY.curve}</span>
-            <small>{COPY.placeholder}</small>
-          </div>
+          <ProgressBar />
+          <CentsChart />
           <div className="side-section">
             <span>{COPY.history}</span>
             <small>{COPY.placeholder}</small>
