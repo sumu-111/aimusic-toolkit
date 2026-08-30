@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react'
 import './App.css'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { FlowCanvas } from './components/canvas/FlowCanvas'
 import { ChatInput } from './components/chat/ChatInput'
 import { PlanPanel } from './components/chat/PlanPanel'
@@ -26,7 +27,8 @@ const COPY = {
   importWav: '\u5bfc\u5165 WAV',
   save: '\u4fdd\u5b58',
   revert: '\u56de\u9000',
-  browserFallback: '\u6d4f\u89c8\u5668\u515c\u5e95',
+  browserFallbackMode:
+    '\u6d4f\u89c8\u5668\u515c\u5e95\u6a21\u5f0f\uff08mock\uff09',
   electronHost: 'Electron Host',
   canvas: '\u753b\u5e03',
   waveform: '\u6ce2\u5f62\u533a',
@@ -108,6 +110,52 @@ function formatFullRun(elapsedMs: number) {
   return elapsedMs ? `${(elapsedMs / 1000).toFixed(1)} \u79d2` : '--'
 }
 
+function writeAscii(view: DataView, offset: number, value: string) {
+  for (let index = 0; index < value.length; index += 1) {
+    view.setUint8(offset + index, value.charCodeAt(index))
+  }
+}
+
+function createDemoWavUrl() {
+  const sampleRate = 44100
+  const durationSec = 30
+  const samples = sampleRate * durationSec
+  const dataSize = samples * 2
+  const buffer = new ArrayBuffer(44 + dataSize)
+  const view = new DataView(buffer)
+
+  writeAscii(view, 0, 'RIFF')
+  view.setUint32(4, 36 + dataSize, true)
+  writeAscii(view, 8, 'WAVE')
+  writeAscii(view, 12, 'fmt ')
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1, true)
+  view.setUint16(22, 1, true)
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, sampleRate * 2, true)
+  view.setUint16(32, 2, true)
+  view.setUint16(34, 16, true)
+  writeAscii(view, 36, 'data')
+  view.setUint32(40, dataSize, true)
+
+  for (let index = 0; index < samples; index += 1) {
+    const t = index / sampleRate
+    const envelope = 0.32 + 0.18 * Math.sin(2 * Math.PI * 0.35 * t)
+    const tone =
+      Math.sin(2 * Math.PI * 220 * t) +
+      0.45 * Math.sin(2 * Math.PI * 440 * t)
+    const sample = Math.max(-1, Math.min(1, tone * envelope * 0.45))
+
+    view.setInt16(44 + index * 2, sample * 0x7fff, true)
+  }
+
+  return {
+    durationSec,
+    sampleRate,
+    url: URL.createObjectURL(new Blob([buffer], { type: 'audio/wav' })),
+  }
+}
+
 function App() {
   const hasHostApi = typeof window !== 'undefined' && Boolean(window.api)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -121,6 +169,7 @@ function App() {
   const inspectorNode = useProjectStore((state) => state.inspectorNode)
   const setTrack = useProjectStore((state) => state.setTrack)
   const revert = useProjectStore((state) => state.revert)
+  const reset = useProjectStore((state) => state.reset)
 
   useEffect(() => {
     let cancelled = false
@@ -194,6 +243,42 @@ function App() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    function handleDemoShortcut(event: KeyboardEvent) {
+      if (!event.ctrlKey || !event.shiftKey || event.key.toLowerCase() !== 'd') {
+        return
+      }
+
+      event.preventDefault()
+
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current)
+      }
+
+      const importStart = performance.now()
+      const demo = createDemoWavUrl()
+
+      objectUrlRef.current = demo.url
+      reset()
+      setImportMessage(null)
+      setTrack(
+        {
+          track_id: `demo-${Date.now()}`,
+          file_path: 'demo-vocal-30s.wav',
+          file_name: 'demo-vocal-30s.wav',
+          duration_sec: demo.durationSec,
+          sample_rate: demo.sampleRate,
+          url: demo.url,
+        },
+        Math.round(performance.now() - importStart),
+      )
+    }
+
+    window.addEventListener('keydown', handleDemoShortcut)
+
+    return () => window.removeEventListener('keydown', handleDemoShortcut)
+  }, [reset, setTrack])
 
   async function importFile(file: File) {
     const importStart = performance.now()
@@ -316,22 +401,28 @@ function App() {
         </div>
 
         <div className="runtime">
-          <span>{hasHostApi ? COPY.electronHost : COPY.browserFallback}</span>
-          <span>Mock {import.meta.env.VITE_MOCK ?? 'unset'}</span>
-          <span>
+          <span className={`runtime-pill ${hasHostApi ? '' : 'fallback'}`}>
+            {hasHostApi ? COPY.electronHost : COPY.browserFallbackMode}
+          </span>
+          <span className="runtime-pill">
+            Mock {import.meta.env.VITE_MOCK ?? 'unset'}
+          </span>
+          <span className="runtime-pill">
             {COPY.fullRun} {formatFullRun(lastFullRunMs)}
           </span>
-          {restoreNotice && <span>{restoreNotice}</span>}
+          {restoreNotice && <span className="runtime-pill warn">{restoreNotice}</span>}
         </div>
       </header>
 
       <section className="workspace">
         <aside className="pane pane-left" aria-label={COPY.canvas}>
-          <div className="pane-heading">
-            <span>{COPY.canvas}</span>
-            <small>320 px</small>
-          </div>
-          <FlowCanvas />
+          <ErrorBoundary label={COPY.canvas}>
+            <div className="pane-heading">
+              <span>{COPY.canvas}</span>
+              <small>320 px</small>
+            </div>
+            <FlowCanvas />
+          </ErrorBoundary>
         </aside>
 
         <section
@@ -341,32 +432,36 @@ function App() {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
         >
-          <div className="pane-heading">
-            <span>{COPY.waveform}</span>
-            <small>{COPY.minViewport}</small>
-          </div>
+          <ErrorBoundary label={COPY.waveform}>
+            <div className="pane-heading">
+              <span>{COPY.waveform}</span>
+              <small>{COPY.minViewport}</small>
+            </div>
 
-          <WaveformPanel
-            importMessage={importMessage}
-            onImportClick={() => fileInputRef.current?.click()}
-          />
+            <WaveformPanel
+              importMessage={importMessage}
+              onImportClick={() => fileInputRef.current?.click()}
+            />
+          </ErrorBoundary>
         </section>
 
         <aside
           className={`pane pane-right ${inspectorNode ? 'has-inspector' : ''}`}
           aria-label="Side panels"
         >
-          {inspectorNode && (
-            <details className="inspector-panel" open>
-              <summary>Inspector · {inspectorNode.label}</summary>
-              <pre>{JSON.stringify(inspectorNode.metadata, null, 2)}</pre>
-            </details>
-          )}
-          <ChatInput onPlanReady={scrollToPlan} />
-          <PlanPanel ref={planPanelRef} />
-          <ProgressBar />
-          <CentsChart />
-          <HistoryPanel />
+          <ErrorBoundary label="Side panels">
+            {inspectorNode && (
+              <details className="inspector-panel" open>
+                <summary>Inspector - {inspectorNode.label}</summary>
+                <pre>{JSON.stringify(inspectorNode.metadata, null, 2)}</pre>
+              </details>
+            )}
+            <ChatInput onPlanReady={scrollToPlan} />
+            <PlanPanel ref={planPanelRef} />
+            <ProgressBar />
+            <CentsChart />
+            <HistoryPanel />
+          </ErrorBoundary>
         </aside>
       </section>
     </main>

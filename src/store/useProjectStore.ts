@@ -493,6 +493,8 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     const state = get()
     const plan = createLocalPlan(state)
 
+    parseRunId += 1
+
     if (!plan) {
       warnIllegal('applyRuleTemplatePlan', state.status)
       return

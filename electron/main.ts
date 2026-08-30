@@ -117,8 +117,11 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1600,
     height: 1000,
-    minWidth: 1400,
-    minHeight: 800,
+    minWidth: 1600,
+    minHeight: 1000,
+    maxWidth: 1600,
+    maxHeight: 1000,
+    resizable: false,
     backgroundColor: '#0f1115',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),

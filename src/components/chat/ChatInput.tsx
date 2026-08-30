@@ -18,6 +18,8 @@ const COPY = {
     '\u53ea\u628a\u4eba\u58f0\u7b2c3\u5c0f\u8282\u9ad8\u97f3\u4fee\u51c6',
   send: '\u53d1\u9001',
   parsing: '\u6b63\u5728\u89e3\u6790\u610f\u56fe...',
+  parseSlow:
+    '\u89e3\u6790\u8d85\u8fc7 8 \u79d2\uff0c\u53ef\u5207\u5230\u89c4\u5219\u6a21\u677f',
   parseFailed: '\u89e3\u6790\u5931\u8d25',
   retry: '\u91cd\u8bd5',
   template: '\u7528\u89c4\u5219\u6a21\u677f',
@@ -27,6 +29,7 @@ const COPY = {
 export function ChatInput({ onPlanReady }: ChatInputProps) {
   const [text, setText] = useState('')
   const [lastSubmitted, setLastSubmitted] = useState('')
+  const [showTemplateFallback, setShowTemplateFallback] = useState(false)
   const textRef = useRef<HTMLTextAreaElement>(null)
   const status = useProjectStore((state) => state.status)
   const error = useProjectStore((state) => state.error)
@@ -46,6 +49,19 @@ export function ChatInput({ onPlanReady }: ChatInputProps) {
       onPlanReady()
     }
   }, [onPlanReady, plan, status])
+
+  useEffect(() => {
+    if (!isParsing) {
+      setShowTemplateFallback(false)
+      return
+    }
+
+    const timer = window.setTimeout(() => {
+      setShowTemplateFallback(true)
+    }, 8000)
+
+    return () => window.clearTimeout(timer)
+  }, [isParsing])
 
   function submit(nextText = text) {
     const trimmed = nextText.trim()
@@ -111,6 +127,14 @@ export function ChatInput({ onPlanReady }: ChatInputProps) {
           <div />
           <div />
           <strong>{COPY.parsing}</strong>
+          {showTemplateFallback && (
+            <div className="parse-slow-row">
+              <span>{COPY.parseSlow}</span>
+              <button type="button" onClick={handleTemplate}>
+                {COPY.template}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

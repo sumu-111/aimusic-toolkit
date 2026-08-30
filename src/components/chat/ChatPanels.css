@@ -154,6 +154,38 @@
   font-size: 12px;
 }
 
+.parse-slow-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.parse-slow-row span {
+  overflow: hidden;
+  color: #ffe2a3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.parse-slow-row button {
+  min-height: 28px;
+  padding: 0 9px;
+  border: 1px solid #7e6221;
+  border-radius: 8px;
+  color: #ffe2a3;
+  background: #2b230e;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.parse-slow-row button:hover {
+  border-color: #d6a835;
+  background: #3c2e0f;
+}
+
 .chat-error-card {
   display: grid;
   gap: 8px;
