@@ -282,8 +282,9 @@ export function WaveformPanel({
   const isAnalyzing = status === 'analyzing'
   const canAnalyze =
     Boolean(track) && (status === 'idle' || status === 'reverted')
-  const visibleError = error
-    ? error
+  const analyzeError = error?.source === 'analyze' ? error : null
+  const visibleError = analyzeError
+    ? analyzeError
     : loadError
       ? {
           error_code: COPY.waveformError,
@@ -489,7 +490,11 @@ export function WaveformPanel({
 
   return (
     <div className="waveform-panel">
-      <button className="import-target" type="button" onClick={onImportClick}>
+      <button
+        className={`import-target${track ? ' has-track' : ''}`}
+        type="button"
+        onClick={onImportClick}
+      >
         <strong>{track ? COPY.currentTrack : COPY.importWav}</strong>
         <span>{track?.file_name ?? COPY.waitingTrack}</span>
       </button>

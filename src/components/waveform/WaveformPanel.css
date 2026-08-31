@@ -1,9 +1,10 @@
 .waveform-panel {
   min-height: 0;
   display: grid;
-  grid-template-rows: auto auto auto minmax(260px, 1fr) 164px auto auto auto;
-  gap: 14px;
-  overflow: auto;
+  grid-template-rows: auto auto auto minmax(200px, 1fr) 122px auto auto auto;
+  gap: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 2px;
 }
 
@@ -44,6 +45,23 @@
   color: var(--muted);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 已导入音频后，这块和下面的「文件名」卡片信息重复，
+   收成一条窄条把纵向空间让给波形和 A/B。 */
+.import-target.has-track {
+  min-height: 40px;
+  grid-auto-flow: column;
+  grid-template-columns: auto minmax(0, 1fr);
+  justify-content: start;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  text-align: left;
+}
+
+.import-target.has-track strong {
+  font-size: 14px;
 }
 
 .waveform-track-grid {
@@ -98,7 +116,7 @@
 
 .waveform-stage {
   position: relative;
-  min-height: 296px;
+  min-height: 200px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -166,7 +184,7 @@
 }
 
 .pitch-track {
-  min-height: 164px;
+  min-height: 122px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -198,7 +216,7 @@
 
 .pitch-track svg {
   width: 100%;
-  height: 130px;
+  height: 88px;
   display: block;
 }
 

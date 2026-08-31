@@ -42,7 +42,7 @@ export function ChatInput({ onPlanReady }: ChatInputProps) {
   const canSend =
     text.trim().length > 0 &&
     (status === 'analyzed' || status === 'plan_pending')
-  const parseError = status === 'analyzed' && error ? error : null
+  const parseError = error?.source === 'parse' ? error : null
 
   useEffect(() => {
     if (plan && status === 'plan_pending') {

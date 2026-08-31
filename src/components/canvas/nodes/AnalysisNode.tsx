@@ -27,7 +27,14 @@ export function AnalysisNode() {
   const error = useProjectStore((state) => state.error)
   const confidence = averageConfidence(analysis)
   const isAnalyzing = status === 'analyzing'
-  const tone = error && !analysis ? 'failed' : isAnalyzing ? 'busy' : analysis ? 'done' : 'todo'
+  const tone =
+    error?.source === 'analyze' && !analysis
+      ? 'failed'
+      : isAnalyzing
+        ? 'busy'
+        : analysis
+          ? 'done'
+          : 'todo'
 
   return (
     <NodeShell title={COPY.title} tone={tone}>

@@ -25,6 +25,14 @@ export type ProjectStatus =
 
 type PlaybackSource = 'original' | 'rendered'
 
+/**
+ * 错误来源。面板只渲染自己那一路的失败，避免 parse/render 的错误
+ * 被当成「分析失败」显示在波形区。
+ */
+export type ErrorSource = 'analyze' | 'parse' | 'execute'
+
+export type ProjectError = ApiError & { source: ErrorSource }
+
 export type CanvasNodeId = 'audio-import' | 'analysis' | 'pitch-fix'
 
 export type NodePosition = {
@@ -48,7 +56,7 @@ type ProjectStateSlice = {
   nodePositions: Record<CanvasNodeId, NodePosition>
   inspectorNode: InspectorNode | null
   status: ProjectStatus
-  error: ApiError | null
+  error: ProjectError | null
   elapsedMs: number
   lastFullRunMs: number
   lastIntentText: string
@@ -391,7 +399,7 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
 
     set({
       status: 'idle',
-      error: result.error,
+      error: { ...result.error, source: 'analyze' },
       elapsedMs,
       workflowElapsedMs,
     })
@@ -550,7 +558,7 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
 
     set({
       status: 'analyzed',
-      error: result.error,
+      error: { ...result.error, source: 'parse' },
       elapsedMs,
       workflowElapsedMs,
     })
@@ -656,7 +664,7 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
 
     set({
       status: 'plan_pending',
-      error: result.error,
+      error: { ...result.error, source: 'execute' },
       elapsedMs,
       workflowElapsedMs: totalMs,
       history: [
@@ -689,8 +697,9 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
         ? {
             error_code: ErrorCode.CANCELLED,
             message: 'Execution cancelled',
+            source: 'execute',
           }
-        : result.error,
+        : { ...result.error, source: 'execute' },
       playbackSource: 'original',
     })
   },

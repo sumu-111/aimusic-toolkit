@@ -1,8 +1,12 @@
 .app-shell {
-  min-height: 100vh;
+  /* 用 height 而不是 min-height：窗口锁死在 1600x1000 且不可缩放，
+     整页滚动会把顶栏的 status 和全链路耗时顶出视野。约束到视口高度后，
+     每一栏用自己的 overflow 滚动，顶栏常驻。 */
+  height: 100vh;
   min-width: 1400px;
   display: grid;
   grid-template-rows: 64px minmax(0, 1fr);
+  overflow: hidden;
   background: var(--bg);
 }
 
@@ -135,12 +139,14 @@
   min-height: 0;
   display: grid;
   grid-template-columns: 320px minmax(0, 1fr) 380px;
+  overflow: hidden;
 }
 
 .pane {
   min-width: 0;
   min-height: 0;
-  padding: 18px;
+  padding: 16px 18px;
+  overflow: hidden;
   background: var(--panel);
 }
 
@@ -185,7 +191,15 @@
 .pane-center {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 16px;
+  gap: 12px;
+  min-height: 0;
+}
+
+.pane-left {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
 }
 
 .track-grid {
@@ -229,12 +243,45 @@
   padding: 0 14px;
 }
 
+/* 用 flex 而不是固定行数的 grid：grid 的 minmax(_, auto) 在高度被约束后
+   会把五个面板压扁，计划面板的 strength 滑杆和「确认执行」会被自己的
+   overflow 裁掉。flex + flex:none 让每块保持自然高度，超出的部分由整列滚动。 */
 .pane-right {
-  display: grid;
-  grid-template-rows: repeat(5, minmax(118px, auto));
-  gap: 14px;
-  align-content: start;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+
+.pane-right > * {
+  flex: none;
+}
+
+/* 渲染完成后把偏差曲线提到进度条上方：进度条已经是 100% 没什么可看的，
+   而 demo 脚本 2:00-2:30 要展示的正是 before/after cents。这样 42 -> 8
+   连同折线图都落在首屏内，不用滚右栏。回退后 status 变回 plan_pending，
+   顺序自动还原。 */
+.pane-right.is-rendered .chat-panel {
+  order: 1;
+}
+
+.pane-right.is-rendered .plan-panel {
+  order: 2;
+}
+
+.pane-right.is-rendered .cents-panel {
+  order: 3;
+}
+
+.pane-right.is-rendered .progress-panel {
+  order: 4;
+}
+
+.pane-right.is-rendered .history-panel {
+  order: 5;
 }
 
 .pane-right.has-inspector {
@@ -269,7 +316,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  padding: 16px;
+  padding: 12px 14px;
 }
 
 .side-section span {

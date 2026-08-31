@@ -2,9 +2,9 @@
 .cents-panel {
   min-height: 0;
   display: grid;
-  gap: 12px;
+  gap: 10px;
   align-content: start;
-  overflow: auto;
+  overflow: visible;
 }
 
 .progress-panel .panel-title-row,
@@ -170,7 +170,7 @@
 
 .cents-svg {
   width: 100%;
-  min-height: 132px;
+  min-height: 104px;
   border: 1px solid #252b38;
   border-radius: 8px;
   background: #10131a;
@@ -200,9 +200,9 @@
 }
 
 .ab-compare {
-  min-height: 260px;
+  min-height: 196px;
   display: grid;
-  grid-template-rows: auto minmax(168px, 1fr) auto auto auto;
+  grid-template-rows: auto minmax(116px, 1fr) auto auto auto;
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--border);
@@ -211,7 +211,7 @@
 }
 
 .ab-compare.empty {
-  min-height: 180px;
+  min-height: 150px;
 }
 
 .ab-header,
@@ -266,13 +266,13 @@
 }
 
 .ab-wave-stack {
-  min-height: 168px;
+  min-height: 116px;
   display: grid;
   gap: 10px;
 }
 
 .ab-row {
-  min-height: 78px;
+  min-height: 54px;
   display: grid;
   grid-template-columns: 88px minmax(0, 1fr);
   align-items: center;

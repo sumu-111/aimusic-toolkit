@@ -2,13 +2,15 @@
 .side-section.plan-panel {
   min-height: 0;
   display: grid;
-  gap: 12px;
+  gap: 10px;
   align-content: start;
-  overflow: auto;
+  /* 不允许自身裁切：这两块里有「发送」和「确认执行」，
+     被裁掉整条链路就断了。溢出交给右栏整列滚动。 */
+  overflow: visible;
 }
 
 .side-section.chat-panel {
-  grid-template-rows: auto minmax(92px, 1fr) auto auto auto;
+  grid-template-rows: auto minmax(64px, 1fr) auto auto auto;
 }
 
 .side-section.plan-panel {
@@ -61,7 +63,7 @@
 
 .chat-panel textarea {
   width: 100%;
-  min-height: 92px;
+  min-height: 64px;
   resize: none;
   border: 1px solid #32394a;
   border-radius: 8px;

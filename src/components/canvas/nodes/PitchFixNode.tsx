@@ -16,7 +16,7 @@ export function PitchFixNode() {
   const status = useProjectStore((state) => state.status)
   const error = useProjectStore((state) => state.error)
   const tone =
-    error && status === 'plan_pending'
+    error?.source === 'execute'
       ? 'failed'
       : status === 'executing'
         ? 'busy'

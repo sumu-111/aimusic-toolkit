@@ -446,7 +446,9 @@ function App() {
         </section>
 
         <aside
-          className={`pane pane-right ${inspectorNode ? 'has-inspector' : ''}`}
+          className={`pane pane-right ${inspectorNode ? 'has-inspector' : ''} ${
+            status === 'rendered' ? 'is-rendered' : ''
+          }`}
           aria-label="Side panels"
         >
           <ErrorBoundary label="Side panels">
