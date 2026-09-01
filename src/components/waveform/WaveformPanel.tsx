@@ -520,11 +520,13 @@ export function WaveformPanel({
 
       <div className="transport">
         <button
+          className="play-button"
           type="button"
           onClick={handlePlayPause}
           disabled={!track?.url || !isReady}
+          aria-label={isPlaying ? COPY.pause : COPY.play}
         >
-          {isPlaying ? COPY.pause : COPY.play}
+          {isPlaying ? '⏸' : '▶'}
         </button>
         <input
           aria-label="Waveform seek"
@@ -536,12 +538,9 @@ export function WaveformPanel({
           type="range"
           value={Math.min(currentTime, seekMax)}
         />
-        <span>
+        <span className="transport-time">
           {formatTime(currentTime)} / {formatTime(displayDuration)}
         </span>
-        <button type="button" onClick={() => void runAnalyze()} disabled={!canAnalyze}>
-          {COPY.analyze}
-        </button>
       </div>
 
       <div className="waveform-stage">
@@ -571,16 +570,26 @@ export function WaveformPanel({
       <ABCompare />
 
       <div className="analysis-strip waveform-analysis-strip">
-        <span>
-          {COPY.bars} {bars.length}
-        </span>
-        <span>
-          {COPY.pitch} {pitchPoints.length}
-        </span>
-        <span>
-          {COPY.confidence} {confidence === null ? '--' : confidence.toFixed(2)}
-        </span>
-        <span>{elapsedMs ? `${elapsedMs} ms` : '--'}</span>
+        <div className="analysis-metrics">
+          <span>
+            {COPY.bars} {bars.length}
+          </span>
+          <span>
+            {COPY.pitch} {pitchPoints.length}
+          </span>
+          <span>
+            {COPY.confidence} {confidence === null ? '--' : confidence.toFixed(2)}
+          </span>
+          <span>{elapsedMs ? `${elapsedMs} ms` : '--'}</span>
+        </div>
+        <button
+          className="analyze-button"
+          type="button"
+          onClick={() => void runAnalyze()}
+          disabled={!canAnalyze}
+        >
+          {isAnalyzing ? '分析中…' : COPY.analyze}
+        </button>
       </div>
 
       {(visibleError || importMessage) && (
