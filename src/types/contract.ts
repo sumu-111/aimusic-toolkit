@@ -100,6 +100,12 @@ export type CancelResult = {
   cancelled: true
 }
 
+/** 渲染产物本地路径 → data URL（渲染进程不能直接加载 file://，经 main 读取）。 */
+export type ReadFileDataUrlResult = {
+  dataUrl: string
+  sizeBytes: number
+}
+
 export type WorkerEvent = {
   type: string
   payload?: unknown
@@ -114,6 +120,7 @@ export const CHANNELS = {
   render_result: 'render_result',
   save_project: 'save_project',
   load_project: 'load_project',
+  read_file_data_url: 'read_file_data_url',
 } as const
 
 export const ErrorCode = {

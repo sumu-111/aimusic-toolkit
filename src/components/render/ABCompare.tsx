@@ -1,4 +1,4 @@
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { type ChangeEvent, useEffect, useRef, useState } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import { useProjectStore } from '../../store/useProjectStore'
 import type { Bar } from '../../types/contract'
@@ -78,18 +78,44 @@ export function ABCompare() {
     rendered: false,
   })
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [renderedDataUrl, setRenderedDataUrl] = useState<string | null>(null)
   const track = useProjectStore((state) => state.track)
   const render = useProjectStore((state) => state.render)
   const analysis = useProjectStore((state) => state.analysis)
   const selectedBarIndex = useProjectStore((state) => state.selectedBarIndex)
   const selectedBar = getSelectedBar(analysis?.bars ?? [], selectedBarIndex)
-  const renderedUrl = useMemo(() => {
-    if (!render || !track?.url) {
-      return null
+  // 渲染产物：mock 用原音频；真机用 main 进程读 WAV 转 data URL（file:// 被 Chromium 拦截）。
+  useEffect(() => {
+    let cancelled = false
+    setRenderedDataUrl(null)
+
+    if (!render || isMockRuntime()) {
+      return
     }
 
-    return isMockRuntime() ? track.url : render.output_path
-  }, [render, track?.url])
+    void window.api!
+      .readFileAsDataUrl(render.output_path)
+      .then((result) => {
+        if (cancelled) {
+          return
+        }
+        if (result.ok) {
+          setRenderedDataUrl(result.data.dataUrl)
+        } else {
+          setLoadError(result.error.message)
+        }
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setLoadError(error instanceof Error ? error.message : String(error))
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [render])
+  const renderedUrl = renderedDataUrl ?? (isMockRuntime() ? track?.url : null)
   const hasCompare = Boolean(track?.url && render)
   const seekMax = Math.max(duration, track?.duration_sec ?? 0, 0.001)
 

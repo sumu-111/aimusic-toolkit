@@ -10,6 +10,7 @@ import {
   type ExecutePlanReq,
   type ParseIntentReq,
   type ProjectFile,
+  type ReadFileDataUrlResult,
   type Result,
   type SaveProjectResult,
 } from '../src/types/contract.js'
@@ -64,6 +65,30 @@ function registerIpcHandlers() {
     console.info('[ipc-main] cancel')
     return cancelExecution()
   })
+
+  // 渲染产物 WAV → data URL：渲染进程被 Chromium 禁止加载 file:// 本地资源。
+  // 仅放行 .wav 且文件存在的场景，返回 base64 data URL 供 wavesurfer 播放。
+  ipcMain.handle(
+    CHANNELS.read_file_data_url,
+    async (_event, filePath: string): Promise<Result<ReadFileDataUrlResult>> => {
+      try {
+        if (typeof filePath !== 'string' || !filePath.toLowerCase().endsWith('.wav')) {
+          return fail<ReadFileDataUrlResult>('仅支持 .wav 文件')
+        }
+        const stat = await fs.stat(filePath)
+        if (!stat.isFile()) {
+          return fail<ReadFileDataUrlResult>('文件不存在')
+        }
+        const data = await fs.readFile(filePath)
+        const dataUrl = `data:audio/wav;base64,${data.toString('base64')}`
+        return ok({ dataUrl, sizeBytes: data.byteLength })
+      } catch (error) {
+        return fail<ReadFileDataUrlResult>(
+          error instanceof Error ? error.message : String(error),
+        )
+      }
+    },
+  )
 
   ipcMain.handle(
     CHANNELS.save_project,
