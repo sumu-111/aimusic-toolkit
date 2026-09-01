@@ -138,9 +138,6 @@ function createWindow() {
     height: 1000,
     minWidth: 1600,
     minHeight: 1000,
-    maxWidth: 1600,
-    maxHeight: 1000,
-    resizable: false,
     backgroundColor: '#0f1115',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
@@ -148,6 +145,8 @@ function createWindow() {
       nodeIntegration: false,
     },
   })
+
+  win.maximize()
 
   if (process.env.VITE_DEV_SERVER_URL) {
     void win.loadURL(process.env.VITE_DEV_SERVER_URL)
