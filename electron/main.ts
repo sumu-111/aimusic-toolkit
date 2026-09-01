@@ -5,32 +5,25 @@ import { fileURLToPath } from 'node:url'
 import {
   CHANNELS,
   ErrorCode,
-  type AnalysisResult,
   type AnalyzeReq,
   type CancelResult,
   type ExecutePlanReq,
   type ParseIntentReq,
-  type Plan,
   type ProjectFile,
-  type RenderResult,
   type Result,
   type SaveProjectResult,
 } from '../src/types/contract.js'
+import {
+  analyzeTrack,
+  cancelExecution,
+  executePlanTrack,
+  parseIntentTrack,
+} from './workerBridge.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const WORKER_EVENT_CHANNEL = 'worker_event'
 const PROJECT_FILE_NAME = 'project.json'
-
-function workerDown<T>(channel: string): Result<T> {
-  return {
-    ok: false,
-    error: {
-      error_code: ErrorCode.WORKER_DOWN,
-      message: `Python worker is not available for ${channel}`,
-    },
-  }
-}
 
 function ok<T>(data: T): Result<T> {
   return { ok: true, data }
@@ -51,24 +44,25 @@ function getProjectPath() {
 }
 
 function registerIpcHandlers() {
+  // 以下四个 handler 桥接到 Python Flask worker（workerBridge.ts）。
   ipcMain.handle(CHANNELS.analyze, (_event, payload: AnalyzeReq) => {
-    console.info('[ipc-main] worker unavailable', CHANNELS.analyze, payload)
-    return workerDown<AnalysisResult>(CHANNELS.analyze)
+    console.info('[ipc-main] analyze', payload.track_id, payload.file_path)
+    return analyzeTrack(payload)
   })
 
   ipcMain.handle(CHANNELS.parse_intent, (_event, payload: ParseIntentReq) => {
-    console.info('[ipc-main] worker unavailable', CHANNELS.parse_intent, payload)
-    return workerDown<Plan>(CHANNELS.parse_intent)
+    console.info('[ipc-main] parse_intent', payload.text)
+    return parseIntentTrack(payload)
   })
 
   ipcMain.handle(CHANNELS.execute_plan, (_event, payload: ExecutePlanReq) => {
-    console.info('[ipc-main] worker unavailable', CHANNELS.execute_plan, payload)
-    return workerDown<RenderResult>(CHANNELS.execute_plan)
+    console.info('[ipc-main] execute_plan', payload.plan_id)
+    return executePlanTrack(payload)
   })
 
-  ipcMain.handle('cancel', () => {
-    console.info('[ipc-main] worker unavailable', 'cancel')
-    return workerDown<CancelResult>('cancel')
+  ipcMain.handle('cancel', (): Result<CancelResult> => {
+    console.info('[ipc-main] cancel')
+    return cancelExecution()
   })
 
   ipcMain.handle(

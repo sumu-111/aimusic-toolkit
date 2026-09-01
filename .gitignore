@@ -24,3 +24,17 @@ dist-electron
 *.njsproj
 *.sln
 *.sw?
+
+# ===== 后端本地环境与产物（联调补充） =====
+# Python 虚拟环境与缓存
+backend/.venv/
+**/__pycache__/
+*.pyc
+# 后端渲染/测试产物
+backend/output/*.wav
+# 工作区数据与参考项目（不入库）
+.workbuddy/
+references/
+# 本地素材与临时文件
+素材.mp3
+_tmp_*
