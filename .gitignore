@@ -32,6 +32,8 @@ backend/.venv/
 *.pyc
 # 后端渲染/测试产物
 backend/output/*.wav
+# worker 运行时 plan 持久化（含本机绝对路径，不入库）
+backend/output/plans.json
 # 工作区数据与参考项目（不入库）
 .workbuddy/
 references/
