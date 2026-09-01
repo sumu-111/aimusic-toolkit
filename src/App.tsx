@@ -26,7 +26,7 @@ import {
 
 const COPY = {
   appName: 'AI Music Workbench',
-  importWav: '\u5bfc\u5165 WAV',
+  importWav: '\u5bfc\u5165\u97f3\u9891',
   save: '\u4fdd\u5b58',
   revert: '\u56de\u9000',
   browserFallbackMode:
@@ -67,11 +67,15 @@ function makeTrackId(file: File) {
   )
 }
 
-function isWavFile(file: File) {
+function isSupportedAudioFile(file: File) {
+  const name = file.name.toLowerCase()
   return (
-    file.name.toLowerCase().endsWith('.wav') ||
+    name.endsWith('.wav') ||
+    name.endsWith('.mp3') ||
     file.type === 'audio/wav' ||
-    file.type === 'audio/x-wav'
+    file.type === 'audio/x-wav' ||
+    file.type === 'audio/mpeg' ||
+    file.type === 'audio/mp3'
   )
 }
 
@@ -285,9 +289,9 @@ function App() {
   async function importFile(file: File) {
     const importStart = performance.now()
 
-    if (!isWavFile(file)) {
-      setImportMessage('WAV only')
-      console.warn('[app] import ignored: file is not wav', file)
+    if (!isSupportedAudioFile(file)) {
+      setImportMessage('WAV/MP3 only')
+      console.warn('[app] import ignored: file is not wav/mp3', file)
       return
     }
 
@@ -381,7 +385,7 @@ function App() {
         ref={fileInputRef}
         className="file-input"
         type="file"
-        accept=".wav,audio/wav,audio/x-wav"
+        accept=".wav,.mp3,audio/wav,audio/x-wav,audio/mpeg,audio/mp3"
         onChange={handleInputChange}
       />
 

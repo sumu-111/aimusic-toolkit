@@ -26,7 +26,7 @@ const COPY = {
   error: '\u5206\u6790\u5931\u8d25',
   fallback: '\u964d\u7ea7\u4e3a\u6574\u6bb5\u4fee\u97f3',
   fileName: '\u6587\u4ef6\u540d',
-  importWav: '\u70b9\u51fb\u6216\u62d6\u5165 WAV',
+  importWav: '\u70b9\u51fb\u6216\u62d6\u5165\u97f3\u9891 (WAV/MP3)',
   loadingWaveform: '\u52a0\u8f7d\u6ce2\u5f62',
   pause: '\u6682\u505c',
   pitch: 'pitch',
