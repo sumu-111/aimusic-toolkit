@@ -36,6 +36,40 @@ LOW_SR = 16000  # 兜底采样率
 # 内存态：track_id → 资产信息（真实工程保存由 project.json 负责，前端管理）
 TRACKS: dict[str, dict] = {}
 
+# plan 持久化文件：worker 重启后历史 plan（含 file_path 关联）仍可执行
+PLANS_FILE = os.environ.get("PLANS_FILE", os.path.join(OUT_DIR, "plans.json"))
+
+
+def _load_plans():
+    """启动时从磁盘恢复 plan / file_path 条目。"""
+    try:
+        if os.path.exists(PLANS_FILE):
+            with open(PLANS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for pid, entry in data.items():
+                TRACKS[pid] = entry
+            print(f"[worker] plans 恢复 {len(data)} 条", flush=True)
+    except Exception as e:
+        print(f"[worker] plans 加载失败（忽略）: {e}", flush=True)
+
+
+def _save_plans():
+    """仅持久化轻量字段 plan / file_path（analysis 体积大且渲染前会现读文件，不落盘）。"""
+    try:
+        plans: dict[str, dict] = {}
+        for pid, entry in TRACKS.items():
+            out: dict = {}
+            if "plan" in entry:
+                out["plan"] = entry["plan"]
+            if "file_path" in entry:
+                out["file_path"] = entry["file_path"]
+            if out:
+                plans[pid] = out
+        with open(PLANS_FILE, "w", encoding="utf-8") as f:
+            json.dump(plans, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"[worker] plans 保存失败（忽略）: {e}", flush=True)
+
 
 def err(code: str, message: str, status: int = 400):
     return jsonify({"error_code": code, "message": message}), status
@@ -58,6 +92,7 @@ def analyze():
     try:
         result = analyze_file_cached(file_path)
         TRACKS[track_id] = {"file_path": file_path, "analysis": result}
+        _save_plans()
         return jsonify({"track_id": track_id, **result})
     except Exception as e:
         return err("ANALYZE_FAILED", f"分析失败: {e}", 500)
@@ -74,6 +109,7 @@ def parse_intent_endpoint():
         plan = parse_intent(text, project_state)
         plan_id = f"plan_{int(time.time() * 1000)}"
         TRACKS[plan_id] = {"plan": plan}
+        _save_plans()
         return jsonify({"plan_id": plan_id, "plan": plan, "status": "pending_confirm"})
     except IntentError as e:
         return err("INTENT_PARSE_FAILED", str(e))
@@ -88,12 +124,18 @@ def execute_plan_endpoint():
     parameters = body.get("parameters") or {}
     file_path = body.get("file_path")
     prefer_low_sr = bool(body.get("prefer_low_sr"))  # 前端可选：直接走 16kHz
-    if not file_path or not os.path.exists(file_path):
-        return err("FILE_NOT_FOUND", "缺少有效 file_path", 404)
     plan = {"parameters": parameters}
     if plan_id and plan_id in TRACKS and "plan" in TRACKS[plan_id]:
         plan = TRACKS[plan_id]["plan"]
         plan["parameters"] = parameters  # 用户改参后以最新参数为准
+    # file_path 恢复：body → plan_id 关联 → plan.track 关联（worker 重启后仍可用）
+    if (not file_path or not os.path.exists(file_path)) and plan_id and plan_id in TRACKS:
+        file_path = TRACKS[plan_id].get("file_path") or file_path
+    track_key = plan.get("track") or parameters.get("track")
+    if (not file_path or not os.path.exists(file_path)) and track_key and track_key in TRACKS:
+        file_path = TRACKS[track_key].get("file_path") or file_path
+    if not file_path or not os.path.exists(file_path):
+        return err("FILE_NOT_FOUND", "缺少有效 file_path", 404)
     try:
         # 参数预检：与 parse_intent 同一套 preflight 规则（时间/模式/强度/范围）
         import soundfile as _sf
@@ -122,4 +164,5 @@ def execute_plan_endpoint():
 if __name__ == "__main__":
     port = int(os.environ.get("WORKER_PORT", "8787"))
     print(f"[worker] starting on http://127.0.0.1:{port}", flush=True)
+    _load_plans()
     app.run(host="127.0.0.1", port=port, debug=False, threaded=True)
