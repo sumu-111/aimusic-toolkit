@@ -1,0 +1,39 @@
+.analysis-insight {
+  display: grid;
+  gap: 16px;
+  padding: 4px 2px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-main, #d7dcea);
+}
+
+.analysis-insight h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent, #7c5cff);
+  letter-spacing: 0.02em;
+}
+
+.analysis-insight p {
+  margin: 0 0 8px;
+}
+
+.analysis-insight p:last-child {
+  margin-bottom: 0;
+}
+
+.analysis-insight strong {
+  color: var(--text-strong, #f5f7fb);
+  font-weight: 700;
+}
+
+.analysis-insight ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--muted, #9aa3b8);
+}
+
+.analysis-insight li {
+  margin-bottom: 3px;
+}

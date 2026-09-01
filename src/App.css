@@ -223,7 +223,6 @@
 }
 
 .track-grid span,
-.analysis-strip span:first-child,
 .side-section small {
   color: var(--muted);
 }
@@ -236,11 +235,47 @@
 }
 
 .analysis-strip {
+  position: relative;
+  z-index: 2;
   min-height: 44px;
   display: flex;
   align-items: center;
-  gap: 18px;
+  justify-content: space-between;
+  gap: 12px;
   padding: 0 14px;
+}
+
+.analysis-strip .analysis-metrics {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  color: var(--text-main, #d7dcea);
+  font-size: 13px;
+}
+
+.analysis-strip .analysis-metrics > span:first-child {
+  color: var(--muted);
+}
+
+.analysis-strip .analyze-button {
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid rgba(124, 148, 177, 0.35);
+  border-radius: 6px;
+  color: var(--text-strong, #f5f7fb);
+  background: rgba(124, 92, 255, 0.14);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.analysis-strip .analyze-button:hover:not(:disabled) {
+  background: rgba(124, 92, 255, 0.28);
+}
+
+.analysis-strip .analyze-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
 }
 
 /* 用 flex 而不是固定行数的 grid：grid 的 minmax(_, auto) 在高度被约束后

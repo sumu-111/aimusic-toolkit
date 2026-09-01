@@ -12,6 +12,8 @@ import { FlowCanvas } from './components/canvas/FlowCanvas'
 import { ChatInput } from './components/chat/ChatInput'
 import { PlanPanel } from './components/chat/PlanPanel'
 import { HistoryPanel } from './components/history/HistoryPanel'
+import { AnalysisInsight } from './components/inspector/AnalysisInsight'
+import './components/inspector/AnalysisInsight.css'
 import { CentsChart } from './components/render/CentsChart'
 import { ProgressBar } from './components/render/ProgressBar'
 import { WaveformPanel } from './components/waveform/WaveformPanel'
@@ -458,8 +460,69 @@ function App() {
           <ErrorBoundary label="Side panels">
             {inspectorNode && (
               <details className="inspector-panel" open>
-                <summary>Inspector - {inspectorNode.label}</summary>
-                <pre>{JSON.stringify(inspectorNode.metadata, null, 2)}</pre>
+                <summary>{inspectorNode.label}详情</summary>
+                {(() => {
+                  const meta = inspectorNode.metadata as {
+                    data?: {
+                      analysis?: { bars: { index: number; start_sec: number; end_sec: number }[]; pitch: { t: number; pitch: number; confidence: number }[] }
+                      track?: { file_name?: string; duration_sec?: number; sample_rate?: number }
+                      plan?: { op: string; start_sec: number; end_sec: number; mode: string; strength: number }
+                    }
+                  }
+                  if (inspectorNode.id === 'analysis') {
+                    const analysis = meta.data?.analysis
+                    return (
+                      <AnalysisInsight
+                        bars={analysis?.bars ?? []}
+                        pitch={analysis?.pitch ?? []}
+                        durationSec={analysis?.bars[analysis.bars.length - 1]?.end_sec}
+                      />
+                    )
+                  }
+                  return (
+                    <div className="inspector-simple">
+                      {inspectorNode.id === 'audio-import' ? (
+                        <>
+                          <p>
+                            文件名：
+                            <strong>{meta.data?.track?.file_name ?? '--'}</strong>
+                          </p>
+                          <p>
+                            时长：
+                            {meta.data?.track?.duration_sec
+                              ? `${meta.data.track.duration_sec.toFixed(1)}s`
+                              : '--'}
+                          </p>
+                          <p>
+                            采样率：
+                            {meta.data?.track?.sample_rate
+                              ? `${meta.data.track.sample_rate} Hz`
+                              : '--'}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p>
+                            操作：
+                            <strong>{meta.data?.plan?.op ?? 'correct_pitch'}</strong>
+                          </p>
+                          <p>
+                            区间：
+                            {meta.data?.plan
+                              ? `${meta.data.plan.start_sec}s - ${meta.data.plan.end_sec}s`
+                              : '--'}
+                          </p>
+                          <p>
+                            模式 / 强度：
+                            {meta.data?.plan
+                              ? `${meta.data.plan.mode} / ${meta.data.plan.strength.toFixed(2)}`
+                              : '--'}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  )
+                })()}
               </details>
             )}
             <ChatInput onPlanReady={scrollToPlan} />
