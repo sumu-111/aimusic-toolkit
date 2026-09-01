@@ -1,11 +1,12 @@
 .waveform-panel {
   min-height: 0;
   display: grid;
-  grid-template-rows: auto auto auto minmax(200px, 1fr) 122px auto auto auto;
+  grid-template-rows: auto auto auto minmax(200px, 1fr) auto auto auto auto;
   gap: 12px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 2px;
+  scrollbar-gutter: stable;
 }
 
 .import-target {

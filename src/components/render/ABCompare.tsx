@@ -65,6 +65,10 @@ export function ABCompare() {
   const originalWaveRef = useRef<WaveSurfer | null>(null)
   const renderedWaveRef = useRef<WaveSurfer | null>(null)
   const activeSourceRef = useRef<CompareSource>('original')
+  const mutedRef = useRef<Record<CompareSource, boolean>>({
+    original: false,
+    rendered: true,
+  })
   const selectedBarRef = useRef<Bar | null>(null)
   const loopSelectedRef = useRef(false)
   const [activeSource, setActiveSource] =
@@ -121,6 +125,18 @@ export function ABCompare() {
 
   useEffect(() => {
     activeSourceRef.current = activeSource
+    const original = originalWaveRef.current
+    const rendered = renderedWaveRef.current
+    if (!original || !rendered) return
+    if (activeSource === 'original') {
+      original.setMuted(false)
+      rendered.setMuted(true)
+      mutedRef.current = { original: false, rendered: true }
+    } else {
+      original.setMuted(true)
+      rendered.setMuted(false)
+      mutedRef.current = { original: true, rendered: false }
+    }
   }, [activeSource])
 
   useEffect(() => {
@@ -151,11 +167,15 @@ export function ABCompare() {
     renderedWaveRef.current = rendered
 
     const syncInactiveWave = (source: CompareSource, nextTime: number) => {
+      const inactiveSource: CompareSource =
+        source === 'original' ? 'rendered' : 'original'
       const inactive =
         source === 'original' ? renderedWaveRef.current : originalWaveRef.current
 
+      // muted 的 inactive 不视觉同步进度，避免误导用户以为它在播
       if (
         inactive &&
+        !mutedRef.current[inactiveSource] &&
         Math.abs(inactive.getCurrentTime() - nextTime) > 0.15
       ) {
         inactive.setTime(nextTime)
@@ -379,32 +399,44 @@ export function ABCompare() {
     <section className={`ab-compare ${hasCompare ? '' : 'empty'}`}>
       <div className="ab-header">
         <span>{COPY.title}</span>
-        <div className="ab-switch" role="group" aria-label={COPY.title}>
+        <div className="ab-header-right">
           <button
-            className={activeSource === 'original' ? 'active' : ''}
+            className="ab-play"
             type="button"
-            onClick={() => switchSource('original')}
-            disabled={!ready.original}
+            onClick={() => void handlePlayPause()}
+            disabled={!hasCompare || !ready[activeSource]}
+            aria-label={isPlaying ? COPY.pause : COPY.play}
+            title={isPlaying ? COPY.pause : COPY.play}
           >
-            A
+            {isPlaying ? '\u23f8' : '\u25b6'}
           </button>
-          <button
-            className={activeSource === 'rendered' ? 'active' : ''}
-            type="button"
-            onClick={() => switchSource('rendered')}
-            disabled={!ready.rendered}
-          >
-            B
-          </button>
+          <div className="ab-switch" role="group" aria-label={COPY.title}>
+            <button
+              className={activeSource === 'original' ? 'active' : ''}
+              type="button"
+              onClick={() => switchSource('original')}
+              disabled={!ready.original}
+            >
+              A
+            </button>
+            <button
+              className={activeSource === 'rendered' ? 'active' : ''}
+              type="button"
+              onClick={() => switchSource('rendered')}
+              disabled={!ready.rendered}
+            >
+              B
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="ab-wave-stack">
-        <div className={activeSource === 'original' ? 'ab-row active' : 'ab-row'}>
+        <div className={`ab-row ${activeSource === 'original' ? 'active' : 'muted'}`}>
           <span>{COPY.original}</span>
           <div ref={originalContainerRef} />
         </div>
-        <div className={activeSource === 'rendered' ? 'ab-row active' : 'ab-row'}>
+        <div className={`ab-row ${activeSource === 'rendered' ? 'active' : 'muted'}`}>
           <span>{COPY.rendered}</span>
           <div ref={renderedContainerRef} />
         </div>
