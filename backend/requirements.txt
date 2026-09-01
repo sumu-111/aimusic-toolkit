@@ -1,0 +1,10 @@
+# AI 音乐工作平台 · 后端依赖（与实际验证环境一致，2026-08-25 重固定）
+# 无 torch / 无 TensorFlow / 无 GPU 需求 —— 选型底线
+# 安装：pip install -r requirements.txt
+librosa==1.0.0
+soundfile==0.14.0
+numpy==2.5.2
+scipy==1.18.1
+flask==3.1.3
+flask-cors==6.0.5
+jsonschema==4.26.0
