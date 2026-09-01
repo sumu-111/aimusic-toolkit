@@ -296,11 +296,15 @@ function App() {
     const url = URL.createObjectURL(file)
     objectUrlRef.current = url
     const durationSec = await readDurationSec(url)
+    // Electron：webUtils 取磁盘真实路径给 worker（否则 worker os.path.exists 404）；
+    // 浏览器兜底（无 host API）：退化为文件名，mock 模式不依赖磁盘路径。
+    const filePath =
+      window.api?.getPathForFile?.(file) ?? file.name
 
     setTrack(
       {
         track_id: makeTrackId(file),
-        file_path: file.name,
+        file_path: filePath,
         file_name: file.name,
         duration_sec: durationSec,
         sample_rate: 44100,

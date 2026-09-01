@@ -1,4 +1,9 @@
-import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
+import {
+  contextBridge,
+  ipcRenderer,
+  webUtils,
+  type IpcRendererEvent,
+} from 'electron'
 import {
   CHANNELS,
   type AnalysisResult,
@@ -8,6 +13,7 @@ import {
   type ParseIntentReq,
   type Plan,
   type ProjectFile,
+  type ReadFileDataUrlResult,
   type RenderResult,
   type Result,
   type SaveProjectResult,
@@ -17,6 +23,12 @@ import {
 const WORKER_EVENT_CHANNEL = 'worker_event'
 
 const api = {
+  /** 渲染进程 File → 磁盘真实路径（Electron 官方 webUtils API）。 */
+  getPathForFile: (file: File) => webUtils.getPathForFile(file),
+  readFileAsDataUrl: (filePath: string) =>
+    ipcRenderer.invoke(CHANNELS.read_file_data_url, filePath) as Promise<
+      Result<ReadFileDataUrlResult>
+    >,
   analyze: (req: AnalyzeReq) =>
     ipcRenderer.invoke(CHANNELS.analyze, req) as Promise<Result<AnalysisResult>>,
   parseIntent: (req: ParseIntentReq) =>

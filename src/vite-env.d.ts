@@ -8,6 +8,7 @@ import type {
   ParseIntentReq,
   Plan,
   ProjectFile,
+  ReadFileDataUrlResult,
   RenderResult,
   Result,
   SaveProjectResult,
@@ -15,6 +16,12 @@ import type {
 } from './types/contract'
 
 interface HostApi {
+  /** preload 注入：File → 磁盘真实路径（Electron 官方 webUtils API）。 */
+  getPathForFile: (file: File) => string
+  /** preload 注入：本地 WAV → data URL（渲染进程无法直接加载 file://）。 */
+  readFileAsDataUrl: (
+    filePath: string,
+  ) => Promise<Result<ReadFileDataUrlResult>>
   analyze: (req: AnalyzeReq) => Promise<Result<AnalysisResult>>
   parseIntent: (req: ParseIntentReq) => Promise<Result<Plan>>
   executePlan: (req: ExecutePlanReq) => Promise<Result<RenderResult>>
