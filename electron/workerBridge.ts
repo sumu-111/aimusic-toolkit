@@ -68,6 +68,8 @@ type BackendPlan = {
   scale?: string
   correction_strength?: number
   strength?: number
+  /** transpose（移调）专用：正数升调、负数降调，单位半音 */
+  semitones?: number
   source?: string
 }
 
@@ -96,6 +98,10 @@ type BackendRenderResult = {
   render_ms?: number
   sr?: number
   plan_id?: string
+  /** transpose 专用：verify 透传的操作标识与实际位移 */
+  op?: 'correct_pitch' | 'transpose'
+  applied_shifts?: number[]
+  semitones?: number
 }
 
 type BackendErrorBody = { error_code?: string; message?: string }
@@ -150,26 +156,38 @@ async function callWorker<T>(
 /** 后端 plan → 前端 Plan：扁平化 plan_id、correction_strength → strength。 */
 function toFrontendPlan(backend: BackendParseResult): Plan {
   const plan = backend.plan ?? {}
+  const op = plan.op === 'transpose' ? 'transpose' : 'correct_pitch'
   return {
     plan_id: backend.plan_id,
-    op: 'correct_pitch',
+    op,
     track: plan.track ?? 'vocals',
     start_sec: plan.start_sec ?? 0,
     end_sec: plan.end_sec ?? 0,
     mode: plan.mode ?? 'auto',
     scale: plan.scale ?? 'C_major',
     strength: plan.correction_strength ?? plan.strength ?? 0.8,
+    semitones: plan.semitones ?? 0,
   }
 }
 
 /** 前端 parameters（含 strength）→ 后端 plan 参数（correction_strength）。 */
 function toBackendParameters(params: ExecutePlanReq['parameters']): Record<string, unknown> {
-  return {
+  const base: Record<string, unknown> = {
     start_sec: params.start_sec,
     end_sec: params.end_sec,
+    track: params.track,
+  }
+  if (params.op === 'transpose') {
+    return {
+      ...base,
+      op: 'transpose',
+      semitones: params.semitones ?? 0,
+    }
+  }
+  return {
+    ...base,
     mode: params.mode,
     scale: params.scale,
-    track: params.track,
     correction_strength: params.strength ?? 0.8,
   }
 }
@@ -250,6 +268,9 @@ export async function executePlanTrack(payload: ExecutePlanReq): Promise<Result<
     before_cents: (result.data.before_cents ?? 0) as number,
     after_cents: (result.data.after_cents ?? 0) as number,
     curve: toFrontendCurve(result.data.curve),
+    op: result.data.op === 'transpose' ? 'transpose' : 'correct_pitch',
+    applied_shifts: result.data.applied_shifts,
+    semitones: result.data.semitones,
   }
   return ok(render)
 }

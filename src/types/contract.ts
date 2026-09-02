@@ -18,6 +18,9 @@ export type AnalyzeReq = {
 export type AnalysisResult = {
   bars: Bar[]
   pitch: PitchPoint[]
+  /** librosa 精确时长（秒），分析后用于回填 track.duration_sec 校准前端区间校验 */
+  duration_sec?: number
+  sr?: number
 }
 
 export type TrackSummary = {
@@ -46,13 +49,15 @@ export type ParseIntentReq = {
 
 export type Plan = {
   plan_id: string
-  op: 'correct_pitch'
+  op: 'correct_pitch' | 'transpose'
   track: string
   start_sec: number
   end_sec: number
   mode: string
   scale: string
   strength: number
+  /** transpose（移调）专用：正数升调、负数降调，单位半音 */
+  semitones?: number
 }
 
 export type ExecutePlanReq = {
@@ -65,6 +70,10 @@ export type RenderResult = {
   before_cents: number
   after_cents: number
   curve: { t: number; before: number; after: number }[]
+  /** transpose 专用：操作类型与实际位移（applied_shifts 单位半音） */
+  op?: 'correct_pitch' | 'transpose'
+  applied_shifts?: number[]
+  semitones?: number
 }
 
 export type ApiError = {
