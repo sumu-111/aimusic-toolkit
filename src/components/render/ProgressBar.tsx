@@ -97,11 +97,18 @@ export function ProgressBar() {
         {COPY.cancel}
       </button>
 
-      {render && (
-        <small>
-          {render.before_cents} {' -> '} {render.after_cents} cents
-        </small>
-      )}
+      {render &&
+        (render.op === 'transpose' ? (
+          <small>
+            {'\u5df2\u79fb\u8c03 '}
+            {(render.semitones ?? 0) > 0 ? '+' : ''}
+            {render.semitones ?? 0} {'\u534a\u97f3'}
+          </small>
+        ) : (
+          <small>
+            {render.before_cents} {' -> '} {render.after_cents} cents
+          </small>
+        ))}
     </section>
   )
 }

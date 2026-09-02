@@ -386,8 +386,16 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     logTiming('analyze', elapsedMs)
 
     if (result.ok) {
+      // 用 librosa 精确时长回填 track.duration_sec（HTML5 audio.duration 会舍入，
+      // 导致整首区间 end_sec 误报「超出音频时长」）
+      const track =
+        result.data.duration_sec && state.track
+          ? { ...state.track, duration_sec: result.data.duration_sec }
+          : state.track
+
       set({
         analysis: result.data,
+        track,
         selectedBarIndex: result.data.bars[2]?.index ?? result.data.bars[0]?.index ?? null,
         status: 'analyzed',
         error: null,

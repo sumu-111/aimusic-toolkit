@@ -35,6 +35,11 @@ function formatResult(item: HistoryItem) {
     return item.error?.error_code ?? '--'
   }
 
+  if (item.render.op === 'transpose' || item.plan.op === 'transpose') {
+    const semitones = item.render.semitones ?? item.plan.semitones ?? 0
+    return `${semitones > 0 ? '+' : ''}${semitones} \u534a\u97f3`
+  }
+
   return `${item.render.before_cents} -> ${item.render.after_cents} cents`
 }
 
@@ -73,14 +78,23 @@ export function HistoryPanel() {
                   <dt>{COPY.range}</dt>
                   <dd>{formatRange(item)}</dd>
                 </div>
-                <div>
-                  <dt>mode</dt>
-                  <dd>{item.plan.mode}</dd>
-                </div>
-                <div>
-                  <dt>strength</dt>
-                  <dd>{item.plan.strength.toFixed(2)}</dd>
-                </div>
+                {item.plan.op === 'transpose' ? (
+                  <div>
+                    <dt>{'\u534a\u97f3\u6570'}</dt>
+                    <dd>{item.plan.semitones ?? 0}</dd>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <dt>mode</dt>
+                      <dd>{item.plan.mode}</dd>
+                    </div>
+                    <div>
+                      <dt>strength</dt>
+                      <dd>{item.plan.strength.toFixed(2)}</dd>
+                    </div>
+                  </>
+                )}
                 <div>
                   <dt>{COPY.result}</dt>
                   <dd>{formatResult(item)}</dd>

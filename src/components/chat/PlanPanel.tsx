@@ -11,6 +11,7 @@ const COPY = {
   mode: 'mode',
   scale: 'scale',
   strength: 'strength',
+  semitones: 'semitones(\u534a\u97f3)',
   confirm: '\u786e\u8ba4\u6267\u884c',
   cancel: '\u53d6\u6d88',
   executing: '\u6267\u884c\u4e2d',
@@ -53,7 +54,9 @@ export const PlanPanel = forwardRef<HTMLElement>(function PlanPanel(_, ref) {
       nextViolations.push(COPY.invalidBounds)
     }
 
-    if (length > 15) {
+    // transpose（移调）天然面向整首/大段，不设 15s 窗口上限；
+    // correct_pitch 修音窗口保留 demo 长度限制。
+    if (plan.op !== 'transpose' && length > 15) {
       nextViolations.push(COPY.invalidLength)
     }
 
@@ -64,7 +67,7 @@ export const PlanPanel = forwardRef<HTMLElement>(function PlanPanel(_, ref) {
   const canConfirm = canEdit && violations.length === 0
 
   function updateNumber(
-    key: 'start_sec' | 'end_sec' | 'strength',
+    key: 'start_sec' | 'end_sec' | 'strength' | 'semitones',
     rawValue: string,
   ) {
     const value = Number(rawValue)
@@ -118,45 +121,64 @@ export const PlanPanel = forwardRef<HTMLElement>(function PlanPanel(_, ref) {
             value={plan.end_sec}
           />
         </label>
-        <label>
-          <span>{COPY.mode}</span>
-          <select
-            disabled={!canEdit}
-            onChange={(event) => updatePlanParam('mode', event.target.value)}
-            value={plan.mode}
-          >
-            <option value="scale">scale</option>
-            <option value="fixed">fixed</option>
-            <option value="auto">auto</option>
-          </select>
-        </label>
-        <label>
-          <span>{COPY.scale}</span>
-          <select
-            disabled={!canEdit}
-            onChange={(event) => updatePlanParam('scale', event.target.value)}
-            value={plan.scale}
-          >
-            <option value="C_major">C_major</option>
-            <option value="A_minor">A_minor</option>
-            <option value="chromatic">chromatic</option>
-          </select>
-        </label>
+        {plan.op === 'transpose' ? (
+          <label>
+            <span>{COPY.semitones}</span>
+            <input
+              disabled={!canEdit}
+              max="12"
+              min="-12"
+              onChange={(event) => updateNumber('semitones', event.target.value)}
+              step="1"
+              type="number"
+              value={plan.semitones ?? 0}
+            />
+          </label>
+        ) : (
+          <>
+            <label>
+              <span>{COPY.mode}</span>
+              <select
+                disabled={!canEdit}
+                onChange={(event) => updatePlanParam('mode', event.target.value)}
+                value={plan.mode}
+              >
+                <option value="scale">scale</option>
+                <option value="fixed">fixed</option>
+                <option value="auto">auto</option>
+              </select>
+            </label>
+            <label>
+              <span>{COPY.scale}</span>
+              <select
+                disabled={!canEdit}
+                onChange={(event) => updatePlanParam('scale', event.target.value)}
+                value={plan.scale}
+              >
+                <option value="C_major">C_major</option>
+                <option value="A_minor">A_minor</option>
+                <option value="chromatic">chromatic</option>
+              </select>
+            </label>
+          </>
+        )}
       </div>
 
-      <label className="strength-field">
-        <span>{COPY.strength}</span>
-        <input
-          disabled={!canEdit}
-          max="1"
-          min="0"
-          onChange={(event) => updateNumber('strength', event.target.value)}
-          step="0.05"
-          type="range"
-          value={plan.strength}
-        />
-        <output>{plan.strength.toFixed(2)}</output>
-      </label>
+      {plan.op !== 'transpose' && (
+        <label className="strength-field">
+          <span>{COPY.strength}</span>
+          <input
+            disabled={!canEdit}
+            max="1"
+            min="0"
+            onChange={(event) => updateNumber('strength', event.target.value)}
+            step="0.05"
+            type="range"
+            value={plan.strength}
+          />
+          <output>{plan.strength.toFixed(2)}</output>
+        </label>
+      )}
 
       {violations.length > 0 && (
         <div className="plan-violations">

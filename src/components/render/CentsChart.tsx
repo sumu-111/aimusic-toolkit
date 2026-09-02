@@ -10,6 +10,8 @@ const COPY = {
   reduction: '\u4e0b\u964d',
   revert: '\u56de\u9000',
   seconds: 's',
+  transposed: '\u5df2\u79fb\u8c03',
+  semitones: '\u534a\u97f3',
 }
 
 const WIDTH = 340
@@ -89,11 +91,13 @@ export function CentsChart() {
     )
   }
 
+  const isTranspose = render.op === 'transpose'
   const delta = render.before_cents - render.after_cents
   const reduction =
     render.before_cents === 0
       ? 0
       : (delta / Math.abs(render.before_cents)) * 100
+  const semitones = render.semitones ?? 0
 
   return (
     <section className="side-section cents-panel">
@@ -115,22 +119,31 @@ export function CentsChart() {
         </div>
       </div>
 
-      <div className="cents-metrics">
-        <div>
-          <span>{COPY.before}</span>
-          <strong>{formatCents(render.before_cents)}</strong>
-        </div>
-        <b>{' -> '}</b>
-        <div>
-          <span>{COPY.after}</span>
-          <strong>{formatCents(render.after_cents)}</strong>
-        </div>
-      </div>
-
-      {delta > 0 && (
+      {isTranspose ? (
         <p className="cents-reduction">
-          {COPY.reduction} {reduction.toFixed(0)}%
+          {COPY.transposed} {semitones > 0 ? '+' : ''}
+          {semitones} {COPY.semitones}
         </p>
+      ) : (
+        <>
+          <div className="cents-metrics">
+            <div>
+              <span>{COPY.before}</span>
+              <strong>{formatCents(render.before_cents)}</strong>
+            </div>
+            <b>{' -> '}</b>
+            <div>
+              <span>{COPY.after}</span>
+              <strong>{formatCents(render.after_cents)}</strong>
+            </div>
+          </div>
+
+          {delta > 0 && (
+            <p className="cents-reduction">
+              {COPY.reduction} {reduction.toFixed(0)}%
+            </p>
+          )}
+        </>
       )}
 
       <svg

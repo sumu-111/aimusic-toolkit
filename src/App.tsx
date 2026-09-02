@@ -470,7 +470,7 @@ function App() {
                     data?: {
                       analysis?: { bars: { index: number; start_sec: number; end_sec: number }[]; pitch: { t: number; pitch: number; confidence: number }[] }
                       track?: { file_name?: string; duration_sec?: number; sample_rate?: number }
-                      plan?: { op: string; start_sec: number; end_sec: number; mode: string; strength: number }
+                      plan?: { op: string; start_sec: number; end_sec: number; mode: string; strength: number; semitones?: number }
                     }
                   }
                   if (inspectorNode.id === 'analysis') {
@@ -508,7 +508,11 @@ function App() {
                         <>
                           <p>
                             操作：
-                            <strong>{meta.data?.plan?.op ?? 'correct_pitch'}</strong>
+                            <strong>
+                              {meta.data?.plan?.op === 'transpose'
+                                ? '\u79fb\u8c03'
+                                : (meta.data?.plan?.op ?? '\u4fee\u51c6')}
+                            </strong>
                           </p>
                           <p>
                             区间：
@@ -516,12 +520,19 @@ function App() {
                               ? `${meta.data.plan.start_sec}s - ${meta.data.plan.end_sec}s`
                               : '--'}
                           </p>
-                          <p>
-                            模式 / 强度：
-                            {meta.data?.plan
-                              ? `${meta.data.plan.mode} / ${meta.data.plan.strength.toFixed(2)}`
-                              : '--'}
-                          </p>
+                          {meta.data?.plan?.op === 'transpose' ? (
+                            <p>
+                              半音数：
+                              {meta.data?.plan?.semitones ?? 0}
+                            </p>
+                          ) : (
+                            <p>
+                              模式 / 强度：
+                              {meta.data?.plan
+                                ? `${meta.data.plan.mode} / ${meta.data.plan.strength.toFixed(2)}`
+                                : '--'}
+                            </p>
+                          )}
                         </>
                       )}
                     </div>
