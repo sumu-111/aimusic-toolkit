@@ -1,14 +1,19 @@
 .waveform-panel {
   min-height: 0;
-  display: grid;
-  /* 主波形区严格限高（1fr → max 180），腾出空间让 ABCompare 两行波形
-     在 1000px 窗口内不需滚动就能完整看到；超出仍由 overflow-y 兜底滚动。 */
-  grid-template-rows: auto auto auto minmax(100px, 180px) auto auto auto;
+  display: flex;
+  /* flex column 让每个子项保持自然高度（flex: none），主波形用 max-height:180 封顶
+     替代之前的 grid minmax(100,180)。容器有 overflow-y:auto + scrollbar-gutter stable：
+     目标 1600x1000 下内容自然 < 容器高度，无滚动；屏更矮时自动出现紫色滚动条兜底。 */
+  flex-direction: column;
   gap: 12px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 2px;
   scrollbar-gutter: stable;
+}
+
+.waveform-panel > * {
+  flex: none;
 }
 
 .waveform-panel::-webkit-scrollbar {
@@ -170,6 +175,9 @@
 .waveform-stage {
   position: relative;
   min-height: 120px;
+  /* 主波形最大 180（替代之前 grid 的 minmax(_,180)），保证 1000px 窗口
+     下 AB 区仍有空间不被主波形挤掉；wavesurfer canvas 高度由此限。 */
+  max-height: 180px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;

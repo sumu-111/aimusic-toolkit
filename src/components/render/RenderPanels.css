@@ -203,14 +203,15 @@
   min-height: 160px;
   display: grid;
   /* header + wave-stack + controls + 可能错误行；wave-stack 取自适应
-     min 130，使两行 56px 波形 + label + padding 在窗内可完整看到。 */
+     min 130，使两行 56px 波形 + label + padding 在窗内可完整看到。
+     不设 overflow:hidden —— 让盒子自然长到能装下全部子项，超出 1600×1000
+     目标尺寸的部分由父 .waveform-panel 的 overflow-y:auto 兜底滚动。 */
   grid-template-rows: auto minmax(130px, 1fr) auto auto auto;
   gap: 8px;
   padding: 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--panel-strong);
-  overflow: hidden;
 }
 
 .ab-compare.empty {
