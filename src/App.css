@@ -289,6 +289,8 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 2px;
+  /* 滚动条常驻占位：渲染后内容变多出现滚动条时，面板宽度不跳 */
+  scrollbar-gutter: stable;
 }
 
 .pane-right > * {

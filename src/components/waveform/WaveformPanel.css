@@ -1,12 +1,31 @@
 .waveform-panel {
   min-height: 0;
   display: grid;
-  grid-template-rows: auto auto auto minmax(200px, 1fr) auto auto auto auto;
+  /* 主波形区严格限高（1fr → max 180），腾出空间让 ABCompare 两行波形
+     在 1000px 窗口内不需滚动就能完整看到；超出仍由 overflow-y 兜底滚动。 */
+  grid-template-rows: auto auto auto minmax(100px, 180px) auto auto auto;
   gap: 12px;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 2px;
   scrollbar-gutter: stable;
+}
+
+.waveform-panel::-webkit-scrollbar {
+  width: 10px;
+}
+
+.waveform-panel::-webkit-scrollbar-thumb {
+  background: rgba(124, 92, 255, 0.45);
+  border-radius: 5px;
+}
+
+.waveform-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 92, 255, 0.75);
+}
+
+.waveform-panel::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .import-target {
@@ -150,7 +169,7 @@
 
 .waveform-stage {
   position: relative;
-  min-height: 200px;
+  min-height: 120px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;

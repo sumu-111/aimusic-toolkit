@@ -314,7 +314,7 @@ export function WaveformPanel({
       cursorColor: '#f5f7fb',
       cursorWidth: 2,
       dragToSeek: true,
-      height: 296,
+      height: 160,
       normalize: true,
       plugins: [regions],
       progressColor: '#7c5cff',

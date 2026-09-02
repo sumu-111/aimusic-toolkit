@@ -48,7 +48,7 @@ function createWaveSurfer(
     cursorColor: '#f5f7fb',
     cursorWidth: 2,
     dragToSeek: true,
-    height: 76,
+    height: 56,
     normalize: true,
     progressColor,
     waveColor,
