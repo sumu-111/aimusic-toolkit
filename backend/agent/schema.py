@@ -1,4 +1,4 @@
-"""correct_pitch 工具 schema（与前端 zod 对齐）"""
+"""correct_pitch / transpose 工具 schema（与前端 zod 对齐）"""
 from __future__ import annotations
 
 CORRECT_PITCH_SCHEMA = {
@@ -21,10 +21,29 @@ CORRECT_PITCH_SCHEMA = {
     },
 }
 
+TRANSPOSE_SCHEMA = {
+    "name": "transpose",
+    "description": "对指定时间范围整体升调或降调（移调），保持相对音高关系不变",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "track": {"type": "string"},
+            "start_sec": {"type": "number", "minimum": 0},
+            "end_sec": {"type": "number", "minimum": 0},
+            "semitones": {"type": "number", "minimum": -12, "maximum": 12},
+        },
+        "required": ["track", "start_sec", "end_sec", "semitones"],
+    },
+}
+
 # 供 LLM 提示词与前端共享的操作描述
 OP_DOC = (
-    "可用操作：correct_pitch（修正音准）\n"
-    "参数：track(轨道名), start_sec(起始秒), end_sec(结束秒), "
+    "可用操作：\n"
+    "1. correct_pitch（修正音准）\n"
+    "   参数：track(轨道名), start_sec(起始秒), end_sec(结束秒), "
     "mode(auto|scale), scale(音阶，mode=scale 时必须), correction_strength(0-1，默认0.8)\n"
+    "2. transpose（整体移调，升调/降调）\n"
+    "   参数：track(轨道名), start_sec(起始秒), end_sec(结束秒), "
+    "semitones(半音数，正数升调、负数降调，如 -2 表示降两个半音)\n"
     "时间坐标必须来自提供的 bars/pitch 上下文，不得自行猜测。"
 )

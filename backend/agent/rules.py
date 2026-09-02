@@ -1,7 +1,9 @@
 """Agent 兜底：规则模板解析（断网/API 失败时离线可用）
 
-解析示例："只把人声第 3 小节高音修准" → correct_pitch plan
-支持："第 N 小节"、"高音/修准/修正/修音"、"强度 X" 等口语模板。
+解析示例：
+- "只把人声第 3 小节高音修准" → correct_pitch plan
+- "全首歌降两个半音" / "整首升调" → transpose plan
+支持："第 N 小节"、"高音/修准/修正/修音"、"强度 X"、"降调/升调/移调" 等口语模板。
 """
 from __future__ import annotations
 
@@ -13,12 +15,14 @@ DEFAULT_STRENGTH = 0.8
 def parse_intent_rules(text: str, project_state: dict) -> dict | None:
     """规则模板解析。project_state 需含 analysis.bars（小节列表）。
 
-    返回 plan dict（correct_pitch 参数），无法解析返回 None。
+    返回 plan dict（correct_pitch / transpose），无法解析返回 None。
     """
     bars = (project_state or {}).get("analysis", {}).get("bars") or []
     duration = (project_state or {}).get("analysis", {}).get("duration_sec") or 0.0
 
     # 1. 小节范围：第 N 小节 / 第 N 到 M 小节
+    # 1. 小节范围：第 N 小节 / 第 N 到 M 小节（bars 缺失时退化为整段）
+    start_sec = end_sec = None
     m = re.search(r"第\s*(\d+)\s*(?:到|至|至第|-)\s*(\d+)\s*小节", text) or \
         re.search(r"第\s*(\d+)\s*小节", text)
     if m:
@@ -26,28 +30,48 @@ def parse_intent_rules(text: str, project_state: dict) -> dict | None:
             start_idx, end_idx = int(m.group(1)), int(m.group(2))
         else:
             start_idx = end_idx = int(m.group(1))
-        if not bars:
-            return None
-        def bar_sec(idx: int) -> tuple[float, float]:
+        if bars:
             for b in bars:
-                if b["index"] == idx:
-                    return b["start_sec"], b["end_sec"]
-            return None
-        seg = bar_sec(start_idx)
-        if seg is None:
-            return None
-        start_sec, end_sec = seg
-        if end_idx != start_idx:
-            seg2 = bar_sec(end_idx)
-            if seg2:
-                end_sec = seg2[1]
-    else:
-        # 2. 未指定小节 → 整段修音
+                if b["index"] == start_idx:
+                    start_sec, end_sec = b["start_sec"], b["end_sec"]
+                    break
+            if start_sec is not None and end_idx != start_idx:
+                for b in bars:
+                    if b["index"] == end_idx:
+                        end_sec = b["end_sec"]
+                        break
+    if start_sec is None:
+        # 2. 未指定小节（或小节表缺失/索引越界）→ 整段
         start_sec, end_sec = 0.0, duration or 0.0
         if end_sec <= 0:
             return None
 
-    # 3. 强度：默认 0.8
+    # 3a. 移调意图：降调/升调/降 key/降 N 个半音/移调
+    # 要求 降/升 后紧跟 调|key|半音（中间可夹数字/中文数字/个），
+    # 避免误伤「升高音」「降低音量」等非移调说法
+    mt = re.search(
+        r"(降|升)\s*[\d两一二三四五六七八九十]*\s*(?:个)?\s*(?:调|key|Key|KEY|半音)",
+        text,
+    ) or re.search(r"移调\s*(?:到)?\s*([+-]?\d+(?:\.\d+)?)?\s*个?\s*半音", text) \
+      or re.search(r"移调\s*(?:到)?\s*([+-]?\d+(?:\.\d+)?)?\s*个?\s*(?:key|Key|KEY)?", text)
+    if mt:
+        direction = -1.0 if mt.group(0).startswith("降") else 1.0
+        steps = 1.0
+        mnum = re.search(r"([+-]?\d+(?:\.\d+)?)", mt.group(0))
+        if mnum:
+            steps = float(mnum.group(1))
+        elif re.search(r"[两二]", mt.group(0)):
+            steps = 2.0
+        return {
+            "op": "transpose",
+            "track": "vocals",
+            "start_sec": round(float(start_sec), 3),
+            "end_sec": round(float(end_sec), 3),
+            "semitones": round(direction * steps, 2),
+            "source": "rules",
+        }
+
+    # 3b. 强度：默认 0.8（仅 correct_pitch 使用）
     strength = DEFAULT_STRENGTH
     ms = re.search(r"强度\s*([0-9]*\.?[0-9]+)", text)
     if ms:

@@ -127,7 +127,10 @@ def execute_plan_endpoint():
     plan = {"parameters": parameters}
     if plan_id and plan_id in TRACKS and "plan" in TRACKS[plan_id]:
         plan = TRACKS[plan_id]["plan"]
-        plan["parameters"] = parameters  # 用户改参后以最新参数为准
+        # 仅当前端带新参数时覆盖；空参数沿用 plan 自身字段，
+        # 否则 plan.get("parameters", plan) 会拿到空 dict 导致 preflight 误报失败
+        if parameters:
+            plan["parameters"] = parameters
     # file_path 恢复：body → plan_id 关联 → plan.track 关联（worker 重启后仍可用）
     if (not file_path or not os.path.exists(file_path)) and plan_id and plan_id in TRACKS:
         file_path = TRACKS[plan_id].get("file_path") or file_path

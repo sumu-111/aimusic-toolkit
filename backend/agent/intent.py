@@ -15,7 +15,7 @@ import jsonschema
 # 兼容直接运行（python agent/intent.py）：把仓库根加入 sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agent.schema import CORRECT_PITCH_SCHEMA, OP_DOC
+from agent.schema import CORRECT_PITCH_SCHEMA, TRANSPOSE_SCHEMA, OP_DOC
 from agent.rules import parse_intent_rules
 
 MAX_SEMITONES = 2.0
@@ -102,14 +102,22 @@ def preflight(plan: dict, project_state: dict) -> list[str]:
         if end <= start:
             errors.append("end_sec 必须大于 start_sec")
 
-    # 3. 参数 bounds
-    strength = plan.get("correction_strength", 0.8)
-    if not (0 <= strength <= 1):
-        errors.append(f"correction_strength {strength} 超出 0-1")
-    if plan.get("mode") not in ("auto", "scale"):
-        errors.append(f"mode '{plan.get('mode')}' 非法")
-    if plan.get("mode") == "scale" and plan.get("scale") is None:
-        errors.append("mode=scale 时必须指定 scale")
+    # 3. 参数 bounds（按操作类型分流）
+    op = plan.get("op")
+    if op == "transpose":
+        semitones = plan.get("semitones")
+        if semitones is None:
+            errors.append("缺少 semitones")
+        elif not (-12 <= semitones <= 12):
+            errors.append(f"semitones {semitones} 超出 ±12 半音")
+    else:
+        strength = plan.get("correction_strength", 0.8)
+        if not (0 <= strength <= 1):
+            errors.append(f"correction_strength {strength} 超出 0-1")
+        if plan.get("mode") not in ("auto", "scale"):
+            errors.append(f"mode '{plan.get('mode')}' 非法")
+        if plan.get("mode") == "scale" and plan.get("scale") is None:
+            errors.append("mode=scale 时必须指定 scale")
 
     # 4. 目标节点未锁定
     for n in nodes:
@@ -138,10 +146,14 @@ def parse_intent(
     try:
         raw = llm(text, project_state)
         parsed = json.loads(raw)
-        if isinstance(parsed, dict) and parsed.get("op") == "correct_pitch":
+        if isinstance(parsed, dict) and parsed.get("op") in ("correct_pitch", "transpose"):
             # 第一层预检：JSON Schema 结构校验（类型/枚举/required），
             # 校验失败抛 ValidationError → 自动降级规则模板
-            jsonschema.validate(parsed, CORRECT_PITCH_SCHEMA["parameters"])
+            schema = (
+                CORRECT_PITCH_SCHEMA if parsed.get("op") == "correct_pitch"
+                else TRANSPOSE_SCHEMA
+            )
+            jsonschema.validate(parsed, schema["parameters"])
             plan = parsed
             plan["source"] = "llm"
     except Exception as e:

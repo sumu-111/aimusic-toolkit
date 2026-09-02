@@ -280,6 +280,68 @@ def _build_curve(f0, voiced, f0_after, voiced_after, times, max_points: int = 80
     return {"times": t_out, "before": b_out, "after": a_out}
 
 
+# ---------- 移调（transpose）渲染 ----------
+
+def transpose_audio(
+    y: np.ndarray,
+    sr: int,
+    start_sec: float,
+    end_sec: float,
+    semitones: float,
+) -> tuple[np.ndarray, np.ndarray]:
+    """整体移调：对 [start_sec, end_sec] 窗口均匀平移 semitones 半音。
+
+    边界 10ms 交叉淡化避免爆音；返回 (合成后完整音频, 处理窗口)。
+    """
+    start_sample = max(0, int(start_sec * sr))
+    end_sample = min(len(y), int(end_sec * sr))
+    if end_sample <= start_sample or abs(semitones) < 1e-9:
+        return y.copy(), y[start_sample:end_sample]
+
+    window = y[start_sample:end_sample]
+    shifted = librosa.effects.pitch_shift(window, sr=sr, n_steps=float(semitones))
+    if len(shifted) > len(window):
+        shifted = shifted[: len(window)]
+    elif len(shifted) < len(window):
+        shifted = np.pad(shifted, (0, len(window) - len(shifted)))
+
+    result = y.copy()
+    result[start_sample:end_sample] = shifted
+
+    # 边界交叉淡化
+    fade = min(int(0.01 * sr), len(window) // 4)
+    if fade > 0:
+        ramp = np.linspace(0.0, 1.0, fade)
+        if start_sample > 0:  # 窗口头：原声淡出 + 移调淡入
+            seg = y[start_sample:start_sample + fade] * (1 - ramp) + shifted[:fade] * ramp
+            result[start_sample:start_sample + fade] = seg
+        if end_sample < len(y):  # 窗口尾：移调淡出 + 原声淡入
+            seg = shifted[-fade:] * (1 - ramp) + y[end_sample - fade:end_sample] * ramp
+            result[end_sample - fade:end_sample] = seg
+    return result, window
+
+
+def transpose_verify(y, sr, window, start_sec, end_sec, semitones) -> dict:
+    """移调验证：before/after 偏差曲线（after = before + semitones*100 cents）。"""
+    f0, voiced, _ = detect_pitch(window, sr)
+    times = librosa.times_like(f0, sr=sr, hop_length=HOP_LENGTH)
+    before_cents = mean_cents_deviation(f0, voiced)
+    if abs(semitones) < 1e-9:
+        f0_after, voiced_after = f0, voiced
+    else:
+        f0_after = f0 * float(2 ** (semitones / 12.0))
+        voiced_after = voiced.copy()
+    after_cents = mean_cents_deviation(f0_after, voiced_after)
+    return {
+        "before_cents": round(before_cents, 2) if before_cents is not None else None,
+        "after_cents": round(after_cents, 2) if after_cents is not None else None,
+        "applied_shifts": [round(float(semitones), 3)],
+        "curve": _build_curve(f0, voiced, f0_after, voiced_after, times),
+        "op": "transpose",
+        "semitones": round(float(semitones), 3),
+    }
+
+
 def render_and_export(
     file_path: str,
     plan: dict,
@@ -287,7 +349,7 @@ def render_and_export(
     sr: int = DEFAULT_SR,
     resample_to: int | None = None,
 ) -> dict:
-    """完整渲染入口：读文件 → 修正 → 合成 → 写 WAV → 返回 render_result。
+    """完整渲染入口：读文件 → 修正/移调 → 合成 → 写 WAV → 返回 render_result。
 
     plan 兼容两种形态：完整 plan dict（含 parameters）或参数 dict 本身。
     resample_to：指定时先降/升采样到该采样率再处理（16kHz 兜底路径），输出即该采样率 WAV。
@@ -300,19 +362,31 @@ def render_and_export(
         y = librosa.resample(y, orig_sr=sr, target_sr=resample_to)
         sr, out_sr = resample_to, resample_to
     params = plan.get("parameters", plan)
-    y_corrected, verify = correct_pitch_with_audio(
-        y, sr,
-        start_sec=params["start_sec"],
-        end_sec=params["end_sec"],
-        mode=params.get("mode", "auto"),
-        scale=params.get("scale"),
-        correction_strength=params.get("correction_strength", 0.8),
-    )
     os.makedirs(out_dir, exist_ok=True)
     stem = os.path.splitext(os.path.basename(file_path))[0]
     suffix = f"_sr{out_sr}" if out_sr != DEFAULT_SR else ""
-    out_path = os.path.join(out_dir, f"{stem}_corrected{suffix}.wav")
-    sf.write(out_path, y_corrected, out_sr)
+
+    if params.get("op") == "transpose":
+        semitones = float(params.get("semitones", 0))
+        y_out, window = transpose_audio(
+            y, sr,
+            start_sec=float(params["start_sec"]),
+            end_sec=float(params["end_sec"]),
+            semitones=semitones,
+        )
+        verify = transpose_verify(y, sr, window, params["start_sec"], params["end_sec"], semitones)
+        out_path = os.path.join(out_dir, f"{stem}_transposed{suffix}.wav")
+    else:
+        y_out, verify = correct_pitch_with_audio(
+            y, sr,
+            start_sec=params["start_sec"],
+            end_sec=params["end_sec"],
+            mode=params.get("mode", "auto"),
+            scale=params.get("scale"),
+            correction_strength=params.get("correction_strength", 0.8),
+        )
+        out_path = os.path.join(out_dir, f"{stem}_corrected{suffix}.wav")
+    sf.write(out_path, y_out, out_sr)
     verify["output_path"] = out_path
     verify["render_ms"] = int((time.time() - t0) * 1000)
     verify["sr"] = out_sr
