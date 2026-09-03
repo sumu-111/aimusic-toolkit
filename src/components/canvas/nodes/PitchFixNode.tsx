@@ -1,4 +1,5 @@
 import { useProjectStore } from '../../../store/useProjectStore'
+import { isPitchPlan } from '../../../types/contract'
 import { NodeShell } from './NodeShell'
 
 const COPY = {
@@ -14,10 +15,12 @@ const COPY = {
 }
 
 export function PitchFixNode() {
-  const plan = useProjectStore((state) => state.plan)
+  const rawPlan = useProjectStore((state) => state.plan)
   const render = useProjectStore((state) => state.render)
   const status = useProjectStore((state) => state.status)
   const error = useProjectStore((state) => state.error)
+  // v2：音效与修音是并列功能，add_sfx / remove_sfx 不归这个节点展示。
+  const plan = rawPlan && isPitchPlan(rawPlan) ? rawPlan : null
   const tone =
     error?.source === 'execute'
       ? 'failed'

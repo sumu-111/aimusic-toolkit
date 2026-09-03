@@ -38,7 +38,7 @@
   display: grid;
   gap: 8px;
   place-items: center;
-  border: 1px dashed #4b5368;
+  border: 1px dashed var(--border-strong);
   border-radius: 8px;
   color: var(--text-strong);
   background: var(--panel-strong);
@@ -131,7 +131,7 @@
 .transport .play-button:disabled {
   cursor: not-allowed;
   opacity: 0.42;
-  background: #3a4256;
+  background: var(--glass-border);
 }
 
 .transport input[type='range'] {
@@ -154,17 +154,17 @@
 
 .analysis-error button {
   min-height: 32px;
-  border: 1px solid #3a4256;
+  border: 1px solid var(--glass-border);
   border-radius: 8px;
   color: var(--text-strong);
-  background: #1b202b;
+  background: var(--glass);
   font: inherit;
   cursor: pointer;
 }
 
 .analysis-error button:hover {
   border-color: var(--accent);
-  background: #242a38;
+  background: var(--glass-hover);
 }
 
 .analysis-error button:disabled {
@@ -183,7 +183,7 @@
   border-radius: 8px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 28%),
-    #10131a;
+    var(--bg);
 }
 
 .wave-host {
@@ -249,7 +249,7 @@
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: #10131a;
+  background: var(--bg);
 }
 
 .pitch-track.empty {
@@ -282,7 +282,7 @@
 }
 
 .pitch-grid-line {
-  stroke: #303746;
+  stroke: var(--border);
   stroke-width: 1;
 }
 

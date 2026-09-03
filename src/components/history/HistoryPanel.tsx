@@ -1,5 +1,9 @@
 import { useProjectStore } from '../../store/useProjectStore'
-import type { HistoryItem } from '../../types/contract'
+import {
+  isPitchPlan,
+  type HistoryItem,
+  type SfxLocate,
+} from '../../types/contract'
 import './HistoryPanel.css'
 
 const COPY = {
@@ -10,6 +14,26 @@ const COPY = {
   rendered: '\u5df2\u6e32\u67d3',
   reverted: '\u5df2\u56de\u9000',
   failed: '\u5931\u8d25',
+  // v2/F7\uff1a\u65b0 op \u7684\u4e2d\u6587\u6587\u6848
+  addSfx: '\u52a0\u97f3\u6548',
+  removeSfx: '\u5220\u97f3\u6548',
+  wholeTrack: '\u5168\u66f2',
+}
+
+/** \u8bed\u4e49\u5b9a\u4f4d \u2192 \u4e2d\u6587\u3002bar:N \u8d70"\u7b2c N \u5c0f\u8282"\u3002 */
+const LOCATE_LABELS: Record<string, string> = {
+  intro: '\u5f00\u5934',
+  verse: '\u4e3b\u6b4c',
+  chorus: '\u526f\u6b4c',
+  outro: '\u7ed3\u5c3e',
+}
+
+function formatLocate(locate: SfxLocate) {
+  if (locate.startsWith('bar:')) {
+    return `\u7b2c ${locate.slice(4)} \u5c0f\u8282`
+  }
+
+  return LOCATE_LABELS[locate] ?? locate
 }
 
 const STATUS_LABELS: Record<HistoryItem['status'], string> = {
@@ -27,20 +51,80 @@ function formatTime(value: string) {
 }
 
 function formatRange(item: HistoryItem) {
-  return `${item.plan.start_sec.toFixed(2)}-${item.plan.end_sec.toFixed(2)}s`
+  const { plan } = item
+
+  if (isPitchPlan(plan)) {
+    return `${plan.start_sec.toFixed(2)}-${plan.end_sec.toFixed(2)}s`
+  }
+
+  if (plan.op === 'add_sfx') {
+    const { start_sec, end_sec } = plan.placement
+    // \u540e\u7aef\u6362\u7b97\u8fc7\u5c31\u663e\u793a\u79d2\uff0c\u5426\u5219\u53ea\u663e\u793a\u8bed\u4e49\u5b9a\u4f4d
+    return start_sec !== undefined && end_sec !== undefined
+      ? `${formatLocate(plan.placement.locate)} ${start_sec.toFixed(2)}-${end_sec.toFixed(2)}s`
+      : formatLocate(plan.placement.locate)
+  }
+
+  return plan.scope === 'all_matching' ? COPY.wholeTrack : '--'
+}
+
+/** 每种 op 展示自己的关键参数，避免用"非 transpose 即修音"这种默认分支。 */
+function planDetails(plan: HistoryItem['plan']): { label: string; value: string }[] {
+  if (plan.op === 'transpose') {
+    return [{ label: '半音数', value: String(plan.semitones ?? 0) }]
+  }
+
+  if (plan.op === 'correct_pitch') {
+    return [
+      { label: 'mode', value: plan.mode },
+      { label: 'strength', value: plan.strength.toFixed(2) },
+    ]
+  }
+
+  if (plan.op === 'add_sfx') {
+    return [
+      { label: '素材', value: plan.asset.sfx_id },
+      { label: '音量', value: `${plan.mix.gain_db} dB` },
+    ]
+  }
+
+  if (plan.op === 'remove_sfx') {
+    return [
+      {
+        label: '目标',
+        value:
+          plan.target.by === 'query' ? plan.target.query : plan.target.clip_id,
+      },
+      { label: '条数', value: String(plan.matches?.length ?? 1) },
+    ]
+  }
+
+  return []
 }
 
 function formatResult(item: HistoryItem) {
-  if (!item.render) {
+  const { plan, render } = item
+
+  if (!render) {
     return item.error?.error_code ?? '--'
   }
 
-  if (item.render.op === 'transpose' || item.plan.op === 'transpose') {
-    const semitones = item.render.semitones ?? item.plan.semitones ?? 0
+  if (plan.op === 'add_sfx') {
+    return `${COPY.addSfx}\u300c${plan.query}\u300d${plan.mix.gain_db} dB`
+  }
+
+  if (plan.op === 'remove_sfx') {
+    const label =
+      plan.target.by === 'query' ? `\u300c${plan.target.query}\u300d` : plan.target.clip_id
+    return `${COPY.removeSfx}${label} \u00d7${plan.matches?.length ?? 1}`
+  }
+
+  if (render.op === 'transpose' || plan.op === 'transpose') {
+    const semitones = render.semitones ?? plan.semitones ?? 0
     return `${semitones > 0 ? '+' : ''}${semitones} \u534a\u97f3`
   }
 
-  return `${item.render.before_cents} -> ${item.render.after_cents} cents`
+  return `${render.before_cents} -> ${render.after_cents} cents`
 }
 
 export function HistoryPanel() {
@@ -78,23 +162,12 @@ export function HistoryPanel() {
                   <dt>{COPY.range}</dt>
                   <dd>{formatRange(item)}</dd>
                 </div>
-                {item.plan.op === 'transpose' ? (
-                  <div>
-                    <dt>{'\u534a\u97f3\u6570'}</dt>
-                    <dd>{item.plan.semitones ?? 0}</dd>
+                {planDetails(item.plan).map((detail) => (
+                  <div key={detail.label}>
+                    <dt>{detail.label}</dt>
+                    <dd>{detail.value}</dd>
                   </div>
-                ) : (
-                  <>
-                    <div>
-                      <dt>mode</dt>
-                      <dd>{item.plan.mode}</dd>
-                    </div>
-                    <div>
-                      <dt>strength</dt>
-                      <dd>{item.plan.strength.toFixed(2)}</dd>
-                    </div>
-                  </>
-                )}
+                ))}
                 <div>
                   <dt>{COPY.result}</dt>
                   <dd>{formatResult(item)}</dd>

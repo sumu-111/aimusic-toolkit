@@ -13,6 +13,9 @@ import { ChatInput } from './components/chat/ChatInput'
 import { PlanPanel } from './components/chat/PlanPanel'
 import { HistoryPanel } from './components/history/HistoryPanel'
 import { AnalysisInsight } from './components/inspector/AnalysisInsight'
+import { ClipListPanel } from './components/sfx/ClipListPanel'
+import { SfxLibraryPanel } from './components/sfx/SfxLibraryPanel'
+import { SfxPlanCard } from './components/sfx/SfxPlanCard'
 import './components/inspector/AnalysisInsight.css'
 import { CentsChart } from './components/render/CentsChart'
 import { ProgressBar } from './components/render/ProgressBar'
@@ -24,18 +27,22 @@ import {
   type ProjectStatus,
 } from './store/useProjectStore'
 
+type RightTab = 'ops' | 'sfx' | 'history'
+
 const COPY = {
   appName: 'AI Music Workbench',
   importWav: '\u5bfc\u5165\u97f3\u9891',
   save: '\u4fdd\u5b58',
   revert: '\u56de\u9000',
-  browserFallbackMode:
-    '\u6d4f\u89c8\u5668\u515c\u5e95\u6a21\u5f0f\uff08mock\uff09',
-  electronHost: 'Electron Host',
+  browserFallbackMode: 'Mock',
+  electronHost: 'Electron',
   canvas: '\u753b\u5e03',
   waveform: '\u6ce2\u5f62\u533a',
-  fullRun: '\u672c\u6b21\u5168\u94fe\u8def',
-  minViewport: '1400 px',
+  fullRun: '\u5168\u94fe\u8def',
+  minViewport: '1200 px',
+  tabOps: '\u64cd\u4f5c',
+  tabSfx: '\u97f3\u6548',
+  tabHistory: '\u5386\u53f2',
 }
 
 const STATUS_LABELS: Record<ProjectStatus, string> = {
@@ -169,6 +176,7 @@ function App() {
   const planPanelRef = useRef<HTMLElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
+  const [rightTab, setRightTab] = useState<RightTab>('ops')
   const status = useProjectStore((state) => state.status)
   const lastFullRunMs = useProjectStore((state) => state.lastFullRunMs)
   const restoreNotice = useProjectStore((state) => state.restoreNotice)
@@ -211,7 +219,8 @@ function App() {
         state.nodePositions !== previousState.nodePositions ||
         state.plan !== previousState.plan ||
         state.render !== previousState.render ||
-        state.selectedBarIndex !== previousState.selectedBarIndex
+        state.selectedBarIndex !== previousState.selectedBarIndex ||
+        state.sfxClips !== previousState.sfxClips
 
       if (!shouldSave) {
         return
@@ -409,19 +418,6 @@ function App() {
             {COPY.revert}
           </button>
         </div>
-
-        <div className="runtime">
-          <span className={`runtime-pill ${hasHostApi ? '' : 'fallback'}`}>
-            {hasHostApi ? COPY.electronHost : COPY.browserFallbackMode}
-          </span>
-          <span className="runtime-pill">
-            Mock {import.meta.env.VITE_MOCK ?? 'unset'}
-          </span>
-          <span className="runtime-pill">
-            {COPY.fullRun} {formatFullRun(lastFullRunMs)}
-          </span>
-          {restoreNotice && <span className="runtime-pill warn">{restoreNotice}</span>}
-        </div>
       </header>
 
       <section className="workspace">
@@ -455,37 +451,59 @@ function App() {
           </ErrorBoundary>
         </section>
 
-        <aside
-          className={`pane pane-right ${inspectorNode ? 'has-inspector' : ''} ${
-            status === 'rendered' ? 'is-rendered' : ''
-          }`}
-          aria-label="Side panels"
-        >
+        <aside className="pane pane-right" aria-label="Side panels">
+          <nav className="right-tabs">
+            <button
+              type="button"
+              className={`right-tab-btn${rightTab === 'ops' ? ' active' : ''}`}
+              onClick={() => setRightTab('ops')}
+            >
+              {COPY.tabOps}
+            </button>
+            <button
+              type="button"
+              className={`right-tab-btn${rightTab === 'sfx' ? ' active' : ''}`}
+              onClick={() => setRightTab('sfx')}
+            >
+              {COPY.tabSfx}
+            </button>
+            <button
+              type="button"
+              className={`right-tab-btn${rightTab === 'history' ? ' active' : ''}`}
+              onClick={() => setRightTab('history')}
+            >
+              {COPY.tabHistory}
+            </button>
+          </nav>
+
+          <div className="right-tab-content">
           <ErrorBoundary label="Side panels">
-            {inspectorNode && (
-              <details className="inspector-panel" open>
-                <summary>{inspectorNode.label}详情</summary>
-                {(() => {
-                  const meta = inspectorNode.metadata as {
-                    data?: {
-                      analysis?: { bars: { index: number; start_sec: number; end_sec: number }[]; pitch: { t: number; pitch: number; confidence: number }[] }
-                      track?: { file_name?: string; duration_sec?: number; sample_rate?: number }
-                      plan?: { op: string; start_sec: number; end_sec: number; mode: string; strength: number; semitones?: number }
-                    }
-                  }
-                  if (inspectorNode.id === 'analysis') {
-                    const analysis = meta.data?.analysis
-                    return (
-                      <AnalysisInsight
-                        bars={analysis?.bars ?? []}
-                        pitch={analysis?.pitch ?? []}
-                        durationSec={analysis?.bars[analysis.bars.length - 1]?.end_sec}
-                      />
-                    )
-                  }
-                  return (
-                    <div className="inspector-simple">
-                      {inspectorNode.id === 'audio-import' ? (
+            {rightTab === 'ops' && (
+              <>
+                {inspectorNode && (
+                  <details className="inspector-panel" open>
+                    <summary>{inspectorNode.label}详情</summary>
+                    {(() => {
+                      const meta = inspectorNode.metadata as {
+                        data?: {
+                          analysis?: { bars: { index: number; start_sec: number; end_sec: number }[]; pitch: { t: number; pitch: number; confidence: number }[] }
+                          track?: { file_name?: string; duration_sec?: number; sample_rate?: number }
+                          plan?: { op: string; start_sec: number; end_sec: number; mode: string; strength: number; semitones?: number }
+                        }
+                      }
+                      if (inspectorNode.id === 'analysis') {
+                        const analysis = meta.data?.analysis
+                        return (
+                          <AnalysisInsight
+                            bars={analysis?.bars ?? []}
+                            pitch={analysis?.pitch ?? []}
+                            durationSec={analysis?.bars[analysis.bars.length - 1]?.end_sec}
+                          />
+                        )
+                      }
+                      return (
+                        <div className="inspector-simple">
+                          {inspectorNode.id === 'audio-import' ? (
                         <>
                           <p>
                             文件名：
@@ -538,16 +556,45 @@ function App() {
                     </div>
                   )
                 })()}
-              </details>
+                  </details>
+                )}
+                <ChatInput onPlanReady={scrollToPlan} />
+                <PlanPanel ref={planPanelRef} />
+                <SfxPlanCard />
+                <ProgressBar />
+                <CentsChart />
+              </>
             )}
-            <ChatInput onPlanReady={scrollToPlan} />
-            <PlanPanel ref={planPanelRef} />
-            <ProgressBar />
-            <CentsChart />
-            <HistoryPanel />
+
+            {rightTab === 'sfx' && (
+              <>
+                <SfxLibraryPanel />
+                <ClipListPanel />
+              </>
+            )}
+
+            {rightTab === 'history' && <HistoryPanel />}
           </ErrorBoundary>
+          </div>
         </aside>
       </section>
+
+      <footer className="status-bar">
+        <span className="status-bar-pill">
+          <span className={`status-bar-dot${hasHostApi ? '' : ' fallback'}`} />
+          {hasHostApi ? COPY.electronHost : COPY.browserFallbackMode}
+        </span>
+        <span className="status-bar-pill">
+          Mock {import.meta.env.VITE_MOCK ?? 'off'}
+        </span>
+        <span className="status-bar-spacer" />
+        <span className="status-bar-pill">
+          {COPY.fullRun} {formatFullRun(lastFullRunMs)}
+        </span>
+        {restoreNotice && (
+          <span className="status-bar-pill warn">{restoreNotice}</span>
+        )}
+      </footer>
     </main>
   )
 }

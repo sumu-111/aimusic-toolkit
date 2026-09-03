@@ -2,14 +2,24 @@ import { create } from 'zustand'
 import { analyze, cancel, executePlan, parseIntent } from '../ipc/client'
 import {
   ErrorCode,
+  SFX_DEFAULTS,
+  isAddSfxPlan,
+  isPitchPlan,
+  isRemoveSfxPlan,
+  type AddSfxPlan,
   type AnalysisResult,
   type ApiError,
   type Bar,
+  type ExecuteParameters,
   type HistoryItem,
+  type PitchPlan,
   type Plan,
   type ProjectFile,
   type ProjectState,
   type RenderResult,
+  type SfxAsset,
+  type SfxClip,
+  type SfxLocate,
   type TrackSummary,
 } from '../types/contract'
 
@@ -63,6 +73,8 @@ type ProjectStateSlice = {
   restoreNotice: string | null
   workflowElapsedMs: number
   playbackSource: PlaybackSource
+  /** v2/F6：工程内全部音效，渲染的唯一事实源 */
+  sfxClips: SfxClip[]
   setNodePosition: (id: CanvasNodeId, position: NodePosition) => void
   selectInspectorNode: (node: InspectorNode | null) => void
   setTrack: (track: TrackSummary, importElapsedMs?: number) => void
@@ -77,12 +89,22 @@ type ProjectStateSlice = {
   selectWholeTrackRange: () => void
   applyRuleTemplatePlan: (text: string) => void
   runParseIntent: (text: string) => Promise<void>
-  updatePlanParam: <K extends keyof Plan>(key: K, value: Plan[K]) => void
+  /** 只编辑修音/移调参数。音效的 gain/fade 编辑走 F4 的独立 action。 */
+  updatePlanParam: <K extends keyof PitchPlan>(
+    key: K,
+    value: PitchPlan[K],
+  ) => void
   confirmPlan: () => Promise<void>
   cancelExecute: () => Promise<void>
   cancelPlan: () => void
   revert: () => void
   reset: () => void
+  addSfxClip: (clip: SfxClip) => void
+  removeSfxClip: (clipId: string) => void
+  toggleMuteClip: (clipId: string) => void
+  createAddSfxPlan: (asset: SfxAsset) => void
+  updateSfxPlanLocate: (locate: SfxLocate) => void
+  updateSfxPlanGain: (gainDb: number) => void
 }
 
 const initialState = {
@@ -106,6 +128,11 @@ const initialState = {
   restoreNotice: null,
   workflowElapsedMs: 0,
   playbackSource: 'original' as PlaybackSource,
+  /**
+   * v2/F6：工程内全部音效。渲染的唯一事实源——execute 时全量下发，
+   * 后端无状态。F6 会补上增删改 actions 与 project.json 持久化。
+   */
+  sfxClips: [] as SfxClip[],
 }
 
 const PROJECT_FILE_VERSION = '1.0'
@@ -144,6 +171,7 @@ function createProjectState(state: ProjectStateSlice): ProjectState {
       id,
       position,
     })),
+    sfxClips: state.sfxClips,
   }
 }
 
@@ -156,6 +184,7 @@ function createProjectFile(state: ProjectStateSlice): ProjectFile {
     analysis: state.analysis,
     history: state.history,
     version: PROJECT_FILE_VERSION,
+    sfxClips: state.sfxClips.length > 0 ? state.sfxClips : undefined,
   }
 }
 
@@ -314,6 +343,7 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       restoreNotice: analysis || project.history.length ? RESTORE_NOTICE : null,
       workflowElapsedMs: 0,
       playbackSource: 'original',
+      sfxClips: project.sfxClips ?? [],
       status: analysis ? 'analyzed' : 'idle',
     })
   },
@@ -327,12 +357,16 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       return
     }
 
+    // 只有修音/移调计划带秒级区间；音效计划的坐标在 placement 里，不参与选中小节回填
+    const restoredPitchPlan = isPitchPlan(item.plan) ? item.plan : null
     const selectedBarIndex =
-      state.analysis?.bars.find(
-        (bar) =>
-          item.plan.start_sec >= bar.start_sec &&
-          item.plan.end_sec <= bar.end_sec,
-      )?.index ?? state.selectedBarIndex
+      (restoredPitchPlan
+        ? state.analysis?.bars.find(
+            (bar) =>
+              restoredPitchPlan.start_sec >= bar.start_sec &&
+              restoredPitchPlan.end_sec <= bar.end_sec,
+          )?.index
+        : undefined) ?? state.selectedBarIndex
 
     set({
       plan: item.plan,
@@ -456,6 +490,7 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
 
     if (
       plan &&
+      isPitchPlan(plan) &&
       (state.status === 'plan_pending' || state.status === 'reverted')
     ) {
       plan = {
@@ -575,7 +610,7 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
   updatePlanParam: (key, value) => {
     const state = get()
 
-    if (!state.plan) {
+    if (!state.plan || !isPitchPlan(state.plan)) {
       warnIllegal('updatePlanParam', state.status)
       return
     }
@@ -585,7 +620,7 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       return
     }
 
-    const plan = { ...state.plan, [key]: value }
+    const plan: PitchPlan = { ...state.plan, [key]: value }
     let analysis = state.analysis
 
     if (
@@ -627,16 +662,41 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     const runId = ++executeRunId
     const start = performance.now()
 
+    let updatedClips = state.sfxClips
+    if (isAddSfxPlan(state.plan)) {
+      const newClip: SfxClip = {
+        clip_id: globalThis.crypto?.randomUUID?.() ?? `clip-${Date.now()}`,
+        sfx_id: state.plan.asset.sfx_id,
+        start_sec: state.plan.placement.start_sec ?? 0,
+        end_sec: state.plan.placement.end_sec,
+        gain_db: state.plan.mix.gain_db,
+        fade_in_ms: state.plan.mix.fade_in_ms,
+        fade_out_ms: state.plan.mix.fade_out_ms,
+        loop: state.plan.mix.loop,
+      }
+      updatedClips = [...state.sfxClips, newClip]
+    } else if (isRemoveSfxPlan(state.plan)) {
+      const matchIds = new Set(state.plan.matches?.map((c) => c.clip_id) ?? [])
+      if (matchIds.size > 0) {
+        updatedClips = state.sfxClips.filter((c) => !matchIds.has(c.clip_id))
+      }
+    }
+
     set({
       status: 'executing',
       error: null,
       elapsedMs: 0,
       render: null,
+      sfxClips: updatedClips,
     })
+
+    const parameters: ExecuteParameters = isPitchPlan(state.plan)
+      ? state.plan
+      : { op: state.plan.op, track: state.plan.track, clips: updatedClips }
 
     const result = await executePlan({
       plan_id: state.plan.plan_id,
-      parameters: state.plan,
+      parameters,
     })
 
     if (runId !== executeRunId) {
@@ -752,6 +812,80 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     parseRunId += 1
     executeRunId += 1
     set({ ...initialState })
+  },
+
+  addSfxClip: (clip) => {
+    set((state) => ({ sfxClips: [...state.sfxClips, clip] }))
+  },
+
+  removeSfxClip: (clipId) => {
+    set((state) => ({
+      sfxClips: state.sfxClips.filter((c) => c.clip_id !== clipId),
+    }))
+  },
+
+  toggleMuteClip: (clipId) => {
+    set((state) => ({
+      sfxClips: state.sfxClips.map((c) =>
+        c.clip_id === clipId ? { ...c, muted: !c.muted } : c,
+      ),
+    }))
+  },
+
+  createAddSfxPlan: (asset) => {
+    const state = get()
+    if (!state.track) {
+      warnIllegal('createAddSfxPlan', state.status)
+      return
+    }
+
+    const plan: AddSfxPlan = {
+      plan_id: globalThis.crypto?.randomUUID?.() ?? `sfx-plan-${Date.now()}`,
+      op: 'add_sfx',
+      track: state.track.track_id,
+      query: asset.name,
+      asset: { sfx_id: asset.sfx_id },
+      placement: { locate: 'intro' },
+      mix: {
+        gain_db: SFX_DEFAULTS.gain_db,
+        fade_in_ms: SFX_DEFAULTS.fade_in_ms,
+        fade_out_ms: SFX_DEFAULTS.fade_out_ms,
+        loop: SFX_DEFAULTS.loop,
+      },
+    }
+
+    parseRunId += 1
+    set({
+      plan,
+      render: null,
+      error: null,
+      status: 'plan_pending',
+      playbackSource: 'original',
+      elapsedMs: 0,
+      lastIntentText: `添加音效: ${asset.name}`,
+    })
+  },
+
+  updateSfxPlanLocate: (locate) => {
+    const state = get()
+    if (!state.plan || !isAddSfxPlan(state.plan)) return
+    set({
+      plan: {
+        ...state.plan,
+        placement: { ...state.plan.placement, locate },
+      },
+    })
+  },
+
+  updateSfxPlanGain: (gainDb) => {
+    const state = get()
+    if (!state.plan || !isAddSfxPlan(state.plan)) return
+    set({
+      plan: {
+        ...state.plan,
+        mix: { ...state.plan.mix, gain_db: gainDb },
+      },
+    })
   },
 }))
 

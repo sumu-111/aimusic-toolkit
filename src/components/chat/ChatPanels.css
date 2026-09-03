@@ -45,10 +45,10 @@
   min-width: 0;
   overflow: hidden;
   padding: 6px 9px;
-  border: 1px solid #394154;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: #d8def0;
-  background: #202633;
+  color: var(--text-strong);
+  background: var(--chip);
   font: inherit;
   font-size: 12px;
   text-overflow: ellipsis;
@@ -58,18 +58,18 @@
 
 .preset-button:hover {
   border-color: var(--accent);
-  background: #272d3d;
+  background: var(--glass-hover);
 }
 
 .chat-panel textarea {
   width: 100%;
   min-height: 64px;
   resize: none;
-  border: 1px solid #32394a;
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 12px;
   color: var(--text-strong);
-  background: #11141b;
+  background: var(--bg-elevated);
   font: inherit;
   line-height: 1.45;
 }
@@ -101,10 +101,10 @@
 .plan-actions button {
   min-height: 32px;
   padding: 0 12px;
-  border: 1px solid #3a4256;
+  border: 1px solid var(--glass-border);
   border-radius: 8px;
   color: var(--text-strong);
-  background: #1b202b;
+  background: var(--glass);
   font: inherit;
   cursor: pointer;
 }
@@ -113,7 +113,7 @@
 .chat-error-card button:hover,
 .plan-actions button:hover {
   border-color: var(--accent);
-  background: #242a38;
+  background: var(--glass-hover);
 }
 
 .chat-actions button:disabled,
@@ -220,9 +220,9 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  border: 1px solid #303746;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #11141b;
+  background: var(--bg-elevated);
 }
 
 .operation-row span {
@@ -256,11 +256,11 @@
 .plan-fields select {
   width: 100%;
   min-height: 34px;
-  border: 1px solid #32394a;
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0 10px;
   color: var(--text-strong);
-  background: #11141b;
+  background: var(--bg-elevated);
   font: inherit;
 }
 

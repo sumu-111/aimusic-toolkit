@@ -12,6 +12,11 @@ import type {
   RenderResult,
   Result,
   SaveProjectResult,
+  SfxDeleteReq,
+  SfxDeleteResult,
+  SfxImportReq,
+  SfxImportResult,
+  SfxListResult,
   WorkerEvent,
 } from './types/contract'
 
@@ -28,6 +33,9 @@ interface HostApi {
   cancel: () => Promise<Result<CancelResult>>
   saveProject: (project: ProjectFile) => Promise<Result<SaveProjectResult>>
   loadProject: () => Promise<Result<ProjectFile | null>>
+  sfxList: () => Promise<Result<SfxListResult>>
+  sfxImport: (req: SfxImportReq) => Promise<Result<SfxImportResult>>
+  sfxDelete: (req: SfxDeleteReq) => Promise<Result<SfxDeleteResult>>
   onWorkerEvent: (cb: (event: WorkerEvent) => void) => () => void
 }
 

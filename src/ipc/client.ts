@@ -12,12 +12,20 @@ import {
   type RenderResult,
   type Result,
   type SaveProjectResult,
+  type SfxDeleteReq,
+  type SfxDeleteResult,
+  type SfxImportReq,
+  type SfxImportResult,
+  type SfxListResult,
 } from '../types/contract'
 import {
   mockAnalyze,
   mockCancel,
   mockExecutePlan,
   mockParseIntent,
+  mockSfxDelete,
+  mockSfxImport,
+  mockSfxList,
 } from './mock'
 
 const PROJECT_STORAGE_KEY = 'ai-music-workbench.project'
@@ -187,6 +195,35 @@ export async function saveProject(
     const cost = Math.round(performance.now() - start)
     console.info(`[ipc] channel=${CHANNELS.save_project} cost=${cost}ms`)
   }
+}
+
+// ───────────────────────── v2 · SFX 库管理（F2）──────────────────────────────
+
+export async function sfxList(): Promise<Result<SfxListResult>> {
+  return invoke(
+    CHANNELS.sfx_list,
+    () => window.api!.sfxList(),
+    () => mockSfxList(),
+    ErrorCode.SFX_LIST_FAILED,
+  )
+}
+
+export async function sfxImport(req: SfxImportReq): Promise<Result<SfxImportResult>> {
+  return invoke(
+    CHANNELS.sfx_import,
+    () => window.api!.sfxImport(req),
+    () => mockSfxImport(req),
+    ErrorCode.SFX_IMPORT_FAILED,
+  )
+}
+
+export async function sfxDelete(req: SfxDeleteReq): Promise<Result<SfxDeleteResult>> {
+  return invoke(
+    CHANNELS.sfx_delete,
+    () => window.api!.sfxDelete(req),
+    () => mockSfxDelete(req),
+    ErrorCode.SFX_DELETE_FAILED,
+  )
 }
 
 export async function loadProject(): Promise<Result<ProjectFile | null>> {

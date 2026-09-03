@@ -13,12 +13,17 @@ import {
   type ReadFileDataUrlResult,
   type Result,
   type SaveProjectResult,
+  type SfxDeleteReq,
+  type SfxImportReq,
 } from '../src/types/contract.js'
 import {
   analyzeTrack,
   cancelExecution,
   executePlanTrack,
   parseIntentTrack,
+  sfxDeleteTrack,
+  sfxImportTrack,
+  sfxListTrack,
 } from './workerBridge.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -64,6 +69,22 @@ function registerIpcHandlers() {
   ipcMain.handle('cancel', (): Result<CancelResult> => {
     console.info('[ipc-main] cancel')
     return cancelExecution()
+  })
+
+  // v2 · SFX 库管理（F2）
+  ipcMain.handle(CHANNELS.sfx_list, () => {
+    console.info('[ipc-main] sfx_list')
+    return sfxListTrack()
+  })
+
+  ipcMain.handle(CHANNELS.sfx_import, (_event, payload: SfxImportReq) => {
+    console.info('[ipc-main] sfx_import', payload.file_path)
+    return sfxImportTrack(payload)
+  })
+
+  ipcMain.handle(CHANNELS.sfx_delete, (_event, payload: SfxDeleteReq) => {
+    console.info('[ipc-main] sfx_delete', payload.sfx_id)
+    return sfxDeleteTrack(payload)
   })
 
   // 渲染产物 WAV → data URL：渲染进程被 Chromium 禁止加载 file:// 本地资源。

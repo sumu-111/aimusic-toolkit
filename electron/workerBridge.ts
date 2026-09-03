@@ -20,6 +20,11 @@ import {
   type Plan,
   type RenderResult,
   type Result,
+  type SfxDeleteReq,
+  type SfxDeleteResult,
+  type SfxImportReq,
+  type SfxImportResult,
+  type SfxListResult,
 } from '../src/types/contract.js'
 
 const WORKER_BASE_URL = process.env.WORKER_URL ?? 'http://127.0.0.1:8787'
@@ -278,4 +283,54 @@ export async function executePlanTrack(payload: ExecutePlanReq): Promise<Result<
 /** 后端渲染为毫秒级，无需真取消；返回成功以复位前端状态机。 */
 export function cancelExecution(): Result<{ cancelled: true }> {
   return ok({ cancelled: true })
+}
+
+// ───────────────────────── v2 · SFX 库管理（F2）──────────────────────────────
+
+export async function sfxListTrack(): Promise<Result<SfxListResult>> {
+  let resp: Response
+  try {
+    resp = await fetch(`${WORKER_BASE_URL}/sfx/list`)
+  } catch (error) {
+    return {
+      ok: false,
+      error: toError(
+        ErrorCode.WORKER_DOWN,
+        `无法连接 Python worker（${WORKER_BASE_URL}）：${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      ),
+    }
+  }
+
+  let data: unknown
+  try {
+    data = await resp.json()
+  } catch {
+    return {
+      ok: false,
+      error: toError(ErrorCode.SFX_LIST_FAILED, `worker 返回了非 JSON 响应（HTTP ${resp.status}）`),
+    }
+  }
+
+  if (!resp.ok) {
+    const errBody = (data ?? {}) as BackendErrorBody
+    return {
+      ok: false,
+      error: toError(
+        mapErrorCode(errBody.error_code ?? '', ErrorCode.SFX_LIST_FAILED),
+        errBody.message ?? `worker HTTP ${resp.status}`,
+      ),
+    }
+  }
+
+  return ok(data as SfxListResult)
+}
+
+export async function sfxImportTrack(payload: SfxImportReq): Promise<Result<SfxImportResult>> {
+  return callWorker<SfxImportResult>('/sfx/import', payload, ErrorCode.SFX_IMPORT_FAILED)
+}
+
+export async function sfxDeleteTrack(payload: SfxDeleteReq): Promise<Result<SfxDeleteResult>> {
+  return callWorker<SfxDeleteResult>('/sfx/delete', payload, ErrorCode.SFX_DELETE_FAILED)
 }

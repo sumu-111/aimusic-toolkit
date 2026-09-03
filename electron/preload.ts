@@ -17,6 +17,11 @@ import {
   type RenderResult,
   type Result,
   type SaveProjectResult,
+  type SfxDeleteReq,
+  type SfxDeleteResult,
+  type SfxImportReq,
+  type SfxImportResult,
+  type SfxListResult,
   type WorkerEvent,
 } from '../src/types/contract.js'
 
@@ -46,6 +51,13 @@ const api = {
     ipcRenderer.invoke(CHANNELS.load_project) as Promise<
       Result<ProjectFile | null>
     >,
+  // v2 · SFX 库管理（F2）
+  sfxList: () =>
+    ipcRenderer.invoke(CHANNELS.sfx_list) as Promise<Result<SfxListResult>>,
+  sfxImport: (req: SfxImportReq) =>
+    ipcRenderer.invoke(CHANNELS.sfx_import, req) as Promise<Result<SfxImportResult>>,
+  sfxDelete: (req: SfxDeleteReq) =>
+    ipcRenderer.invoke(CHANNELS.sfx_delete, req) as Promise<Result<SfxDeleteResult>>,
   onWorkerEvent: (cb: (event: WorkerEvent) => void) => {
     const listener = (_event: IpcRendererEvent, event: WorkerEvent) => cb(event)
 

@@ -1,6 +1,7 @@
 import analysisFixture from '../mock/analysis.json'
 import planFixture from '../mock/plan.json'
 import renderFixture from '../mock/render.json'
+import sfxAssetsFixture from '../mock/sfx-assets.json'
 import {
   CHANNELS,
   ErrorCode,
@@ -9,15 +10,25 @@ import {
   type CancelResult,
   type ExecutePlanReq,
   type ParseIntentReq,
+  type PitchPlan,
   type Plan,
   type RenderResult,
   type Result,
+  type SfxAsset,
+  type SfxDeleteReq,
+  type SfxDeleteResult,
+  type SfxImportReq,
+  type SfxImportResult,
+  type SfxListResult,
 } from '../types/contract'
 
 const DELAYS = {
   [CHANNELS.analyze]: 1200,
   [CHANNELS.parse_intent]: 800,
   [CHANNELS.execute_plan]: 2500,
+  [CHANNELS.sfx_list]: 400,
+  [CHANNELS.sfx_import]: 600,
+  [CHANNELS.sfx_delete]: 250,
   cancel: 120,
 } as const
 
@@ -25,6 +36,9 @@ const ERROR_BY_CHANNEL = {
   [CHANNELS.analyze]: ErrorCode.ANALYZE_FAILED,
   [CHANNELS.parse_intent]: ErrorCode.PARSE_FAILED,
   [CHANNELS.execute_plan]: ErrorCode.RENDER_FAILED,
+  [CHANNELS.sfx_list]: ErrorCode.SFX_LIST_FAILED,
+  [CHANNELS.sfx_import]: ErrorCode.SFX_IMPORT_FAILED,
+  [CHANNELS.sfx_delete]: ErrorCode.SFX_DELETE_FAILED,
   cancel: ErrorCode.CANCELLED,
 } as const
 
@@ -99,7 +113,8 @@ export async function mockParseIntent(
     return fail(CHANNELS.parse_intent, 'Mock parse intent failed')
   }
 
-  const plan = clone(planFixture as Plan)
+  // fixture 是修音计划；音效 mock 走 mockSfx* 系列，不复用这条路径
+  const plan = clone(planFixture as PitchPlan)
   const selectedBar = req.project_state.analysis?.bars.find(
     (bar) => bar.index === req.project_state.selectedBarIndex,
   )
@@ -132,4 +147,80 @@ export async function mockCancel(): Promise<Result<CancelResult>> {
   }
 
   return ok({ cancelled: true })
+}
+
+// ───────────────────────── v2 · SFX 库 mock（F1/F3 离线开发用）─────────────────
+
+/**
+ * 用户导入库的 mock 存储。真实实现由后端 user_library.json 持有（B2），
+ * 这里只为让 F3 的「导入 / 删除」在 VITE_MOCK=1 下能走完整交互。
+ */
+let mockUserAssets: SfxAsset[] = []
+
+function fileNameOf(filePath: string) {
+  const parts = filePath.split(/[\\/]/)
+  return parts[parts.length - 1] || filePath
+}
+
+export async function mockSfxList(): Promise<Result<SfxListResult>> {
+  await delay(DELAYS[CHANNELS.sfx_list])
+
+  if (shouldFail(CHANNELS.sfx_list)) {
+    return fail(CHANNELS.sfx_list, 'Mock sfx list failed')
+  }
+
+  const builtin = clone(sfxAssetsFixture as SfxAsset[])
+  return ok({ assets: [...builtin, ...clone(mockUserAssets)] })
+}
+
+export async function mockSfxImport(
+  req: SfxImportReq,
+): Promise<Result<SfxImportResult>> {
+  await delay(DELAYS[CHANNELS.sfx_import])
+
+  if (shouldFail(CHANNELS.sfx_import)) {
+    return fail(CHANNELS.sfx_import, 'Mock sfx import failed')
+  }
+
+  const name = req.name ?? fileNameOf(req.file_path).replace(/\.[^.]+$/, '')
+  const asset: SfxAsset = {
+    sfx_id: `user_${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+    name,
+    // 导入默认归入「其他」+ 文件名关键词，这是 PPT 页 24 登记过的预期边界
+    category: req.category ?? 'other',
+    keywords: name.split(/[\s_\-]+/).filter(Boolean),
+    duration_sec: 5,
+    source: 'user',
+    license: 'user-provided',
+    source_name: '用户导入',
+  }
+
+  mockUserAssets = [...mockUserAssets, asset]
+  return ok({ asset })
+}
+
+export async function mockSfxDelete(
+  req: SfxDeleteReq,
+): Promise<Result<SfxDeleteResult>> {
+  await delay(DELAYS[CHANNELS.sfx_delete])
+
+  if (shouldFail(CHANNELS.sfx_delete)) {
+    return fail(CHANNELS.sfx_delete, 'Mock sfx delete failed')
+  }
+
+  const before = mockUserAssets.length
+  mockUserAssets = mockUserAssets.filter((a) => a.sfx_id !== req.sfx_id)
+
+  if (mockUserAssets.length === before) {
+    // 只允许删用户库条目，内置库删不掉（后端 B2 同约束）
+    return {
+      ok: false,
+      error: {
+        error_code: ErrorCode.SFX_DELETE_FAILED,
+        message: '只能删除用户导入的音效',
+      },
+    }
+  }
+
+  return ok({ deleted: true, sfx_id: req.sfx_id })
 }

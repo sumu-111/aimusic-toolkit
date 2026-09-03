@@ -1,5 +1,6 @@
 import { forwardRef, useMemo } from 'react'
 import { useProjectStore } from '../../store/useProjectStore'
+import { isPitchPlan } from '../../types/contract'
 import './ChatPanels.css'
 
 const COPY = {
@@ -21,12 +22,17 @@ const COPY = {
     '\u533a\u95f4\u4e0d\u80fd\u8d85\u51fa\u97f3\u9891\u65f6\u957f',
   invalidLength:
     '\u533a\u95f4\u957f\u5ea6\u4e0d\u80fd\u8d85\u8fc7 15 \u79d2',
+  // v2\uff1a\u97f3\u6548\u8ba1\u5212\u7531 F4 \u7684\u786e\u8ba4\u5361\u63a5\u7ba1\uff0c\u8fd9\u91cc\u53ea\u5360\u4f4d
+  sfxPending: '\u97f3\u6548\u8ba1\u5212\uff08\u5f85 F4 \u786e\u8ba4\u5361\uff09',
 }
 
 export const PlanPanel = forwardRef<HTMLElement>(function PlanPanel(_, ref) {
   const track = useProjectStore((state) => state.track)
   const analysis = useProjectStore((state) => state.analysis)
-  const plan = useProjectStore((state) => state.plan)
+  const rawPlan = useProjectStore((state) => state.plan)
+  // v2：这个面板只负责修音/移调计划。add_sfx / remove_sfx 的确认卡是 F4，
+  // 结构不同（素材行、音量滑杆、将删清单勾选），不塞进这里。
+  const plan = rawPlan && isPitchPlan(rawPlan) ? rawPlan : null
   const status = useProjectStore((state) => state.status)
   const updatePlanParam = useProjectStore((state) => state.updatePlanParam)
   const confirmPlan = useProjectStore((state) => state.confirmPlan)
@@ -83,7 +89,8 @@ export const PlanPanel = forwardRef<HTMLElement>(function PlanPanel(_, ref) {
     return (
       <section className="side-section plan-panel empty" ref={ref}>
         <span>{COPY.title}</span>
-        <small>{COPY.empty}</small>
+        {/* 已有计划但不是修音类：说明是音效计划，等 F4 的确认卡接管 */}
+        <small>{rawPlan ? COPY.sfxPending : COPY.empty}</small>
       </section>
     )
   }

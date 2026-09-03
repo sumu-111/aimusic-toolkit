@@ -1,0 +1,354 @@
+/* ─── SFX Library Panel (F3) ─── */
+
+.sfx-library-panel {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sfx-library-panel .sfx-toolbar {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.sfx-library-panel .sfx-search {
+  flex: 1;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-strong);
+  background: var(--bg);
+  font: inherit;
+  font-size: 13px;
+}
+
+.sfx-library-panel .sfx-search:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.sfx-library-panel .sfx-import-btn {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  color: var(--text-strong);
+  background: var(--glass);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sfx-library-panel .sfx-import-btn:hover {
+  border-color: var(--accent);
+}
+
+.sfx-category-tabs {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.sfx-category-tabs button {
+  min-height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.sfx-category-tabs button:hover {
+  color: var(--text-strong);
+  border-color: #4a5270;
+}
+
+.sfx-category-tabs button.active {
+  color: var(--text-strong);
+  border-color: var(--accent);
+  background: rgba(124, 92, 255, 0.14);
+}
+
+.sfx-asset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.sfx-asset-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--chip);
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  text-align: left;
+  cursor: default;
+}
+
+.sfx-asset-row .sfx-asset-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sfx-asset-row .sfx-asset-name {
+  color: var(--text-strong);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sfx-asset-row .sfx-asset-meta {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.sfx-asset-row button {
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-strong);
+  background: var(--panel);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.sfx-asset-row button:hover {
+  border-color: var(--accent);
+}
+
+.sfx-asset-row button.sfx-delete-btn {
+  color: #ff9b9b;
+  border-color: #6a3034;
+}
+
+.sfx-asset-row button.sfx-delete-btn:hover {
+  border-color: #e65252;
+  background: #301a1f;
+}
+
+.sfx-empty {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 12px 0;
+  width: 100%;
+}
+
+/* ─── SFX Plan Card (F4) ─── */
+
+.sfx-plan-card {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sfx-plan-card .sfx-plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.sfx-plan-card .sfx-plan-detail {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  width: 100%;
+  font-size: 13px;
+}
+
+.sfx-plan-card .sfx-plan-detail dt {
+  color: var(--muted);
+}
+
+.sfx-plan-card .sfx-plan-detail dd {
+  margin: 0;
+  color: var(--text-strong);
+}
+
+.sfx-plan-card .sfx-plan-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.sfx-plan-card .sfx-plan-controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.sfx-plan-card .sfx-plan-controls label span {
+  min-width: 50px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.sfx-plan-card .sfx-plan-controls select,
+.sfx-plan-card .sfx-plan-controls input[type='number'] {
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-strong);
+  background: var(--bg);
+  font: inherit;
+  font-size: 13px;
+}
+
+.sfx-plan-card .sfx-plan-controls input[type='range'] {
+  flex: 1;
+}
+
+.sfx-plan-card .sfx-plan-controls output {
+  min-width: 48px;
+  text-align: right;
+  color: var(--text-strong);
+  font-size: 13px;
+}
+
+.sfx-plan-card .sfx-plan-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.sfx-plan-card .sfx-plan-actions button {
+  flex: 1;
+  min-height: 32px;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-strong);
+  background: var(--glass);
+  font: inherit;
+  cursor: pointer;
+}
+
+.sfx-plan-card .sfx-plan-actions button:first-child {
+  border-color: var(--accent);
+  background: rgba(124, 92, 255, 0.18);
+}
+
+.sfx-plan-card .sfx-plan-actions button:hover:not(:disabled) {
+  background: rgba(124, 92, 255, 0.28);
+}
+
+.sfx-plan-card .sfx-plan-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.sfx-match-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.sfx-match-list label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+/* ─── Clip List (F5) ─── */
+
+.clip-list-panel {
+  flex-direction: column;
+  gap: 8px;
+}
+
+.clip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  max-height: 180px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.clip-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--chip);
+  font-size: 12px;
+}
+
+.clip-row.muted {
+  opacity: 0.45;
+}
+
+.clip-row .clip-info {
+  min-width: 0;
+}
+
+.clip-row .clip-id {
+  color: var(--text-strong);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clip-row .clip-meta {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.clip-row button {
+  min-height: 24px;
+  min-width: 24px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-strong);
+  background: var(--panel);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.clip-row button:hover {
+  border-color: var(--accent);
+}
+
+.clip-row button.clip-delete {
+  color: #ff9b9b;
+  border-color: #6a3034;
+}
+
+.clip-row button.clip-delete:hover {
+  border-color: #e65252;
+  background: #301a1f;
+}

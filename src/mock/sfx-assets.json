@@ -1,0 +1,122 @@
+[
+  {
+    "sfx_id": "amb_rain_01",
+    "name": "雨声氛围 · 中雨",
+    "category": "ambience",
+    "keywords": ["雨", "雨声", "下雨", "氛围", "rain", "ambience"],
+    "duration_sec": 24.0,
+    "source": "builtin",
+    "license": "CC0",
+    "source_name": "CC0 自采"
+  },
+  {
+    "sfx_id": "amb_wind_01",
+    "name": "风声氛围 · 旷野",
+    "category": "ambience",
+    "keywords": ["风", "风声", "旷野", "氛围", "wind"],
+    "duration_sec": 30.0,
+    "source": "builtin",
+    "license": "CC0",
+    "source_name": "CC0 自采"
+  },
+  {
+    "sfx_id": "amb_crowd_01",
+    "name": "人群环境 · 室内",
+    "category": "ambience",
+    "keywords": ["人群", "嘈杂", "室内", "环境", "crowd"],
+    "duration_sec": 18.5,
+    "source": "builtin",
+    "license": "Sonniss-GDC",
+    "source_name": "Sonniss GDC 免费包"
+  },
+  {
+    "sfx_id": "trs_riser_01",
+    "name": "上升过渡 · 长",
+    "category": "transition",
+    "keywords": ["上升", "过渡", "riser", "转场", "铺垫"],
+    "duration_sec": 4.0,
+    "source": "builtin",
+    "license": "CC0",
+    "source_name": "CC0 自采"
+  },
+  {
+    "sfx_id": "trs_impact_01",
+    "name": "撞击落点",
+    "category": "transition",
+    "keywords": ["撞击", "落点", "impact", "转场", "重音"],
+    "duration_sec": 2.2,
+    "source": "builtin",
+    "license": "Sonniss-GDC",
+    "source_name": "Sonniss GDC 免费包"
+  },
+  {
+    "sfx_id": "trs_sweep_01",
+    "name": "扫频过渡",
+    "category": "transition",
+    "keywords": ["扫频", "sweep", "过渡", "转场"],
+    "duration_sec": 3.0,
+    "source": "builtin",
+    "license": "CC0",
+    "source_name": "CC0 自采"
+  },
+  {
+    "sfx_id": "emo_applause_01",
+    "name": "掌声 · 小场地",
+    "category": "emotion",
+    "keywords": ["掌声", "鼓掌", "喝彩", "applause", "现场"],
+    "duration_sec": 8.0,
+    "source": "builtin",
+    "license": "Sonniss-GDC",
+    "source_name": "Sonniss GDC 免费包"
+  },
+  {
+    "sfx_id": "emo_cheer_01",
+    "name": "欢呼 · 人群",
+    "category": "emotion",
+    "keywords": ["欢呼", "叫好", "现场", "cheer"],
+    "duration_sec": 6.5,
+    "source": "builtin",
+    "license": "Sonniss-GDC",
+    "source_name": "Sonniss GDC 免费包"
+  },
+  {
+    "sfx_id": "emo_vinyl_01",
+    "name": "黑胶底噪",
+    "category": "emotion",
+    "keywords": ["黑胶", "底噪", "复古", "lofi", "vinyl"],
+    "duration_sec": 20.0,
+    "source": "builtin",
+    "license": "CC0",
+    "source_name": "CC0 自采"
+  },
+  {
+    "sfx_id": "prc_kick_01",
+    "name": "底鼓 · 干",
+    "category": "percussion",
+    "keywords": ["底鼓", "kick", "打击", "鼓"],
+    "duration_sec": 0.8,
+    "source": "builtin",
+    "license": "CC0",
+    "source_name": "CC0 自采"
+  },
+  {
+    "sfx_id": "prc_snap_01",
+    "name": "响指",
+    "category": "percussion",
+    "keywords": ["响指", "打响指", "snap", "打击"],
+    "duration_sec": 0.5,
+    "source": "builtin",
+    "license": "CC0",
+    "source_name": "CC0 自采"
+  },
+  {
+    "sfx_id": "prc_shaker_01",
+    "name": "沙锤 · 循环",
+    "category": "percussion",
+    "keywords": ["沙锤", "shaker", "打击", "循环"],
+    "duration_sec": 4.0,
+    "source": "builtin",
+    "license": "Sonniss-GDC",
+    "source_name": "Sonniss GDC 免费包"
+  }
+]
