@@ -7,6 +7,7 @@
 SfxClip 字段（与前端 contract.ts 对齐）：
   clip_id / sfx_id / name / start_sec(绝对秒) / end_sec?(绝对秒)
   loop? / gain_db(默认 -12) / fade_in_ms(默认 200) / fade_out_ms(默认 500)
+  muted?(静音：保留在 clips 状态里但不参与渲染、不出分离轨)
   locate? / from_text?(仅供展示与追溯)
 
 区间语义：
@@ -165,6 +166,8 @@ def mix_render(
         if not isinstance(clip, dict):
             raise MixError(f"非法 clip 项: {clip!r}")
         cid = str(clip.get("clip_id") or "")
+        if clip.get("muted"):
+            continue  # 静音 clip：保留状态但不渲染（F5 可静音语义）
         sfx_id = str(clip.get("sfx_id") or "")
         if not sfx_id:
             raise MixError(f"clip '{cid}' 缺少 sfx_id")
