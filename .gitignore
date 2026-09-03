@@ -32,6 +32,9 @@ backend/.venv/
 *.pyc
 # 后端渲染/运行产物（wav / 持久化 plan / 稳定性报告，均不入库）
 backend/output/
+# 用户导入的音效库（运行时产物，不入库）
+backend/user_library/
+backend/user_library.json
 # 工作区数据与参考项目（不入库）
 .workbuddy/
 references/

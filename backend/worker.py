@@ -23,6 +23,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from analysis import analyze_file_cached, DEFAULT_SR
 from pitch import render_and_export, PitchGuardError, verify_wav
 from agent.intent import parse_intent, IntentError, preflight
+from sfx import list_assets, import_sfx, delete_sfx, SfxError
+from mix import mix_render, MixError
 
 app = Flask(__name__)
 CORS(app)  # 浏览器兜底
@@ -139,6 +141,25 @@ def execute_plan_endpoint():
         file_path = TRACKS[track_key].get("file_path") or file_path
     if not file_path or not os.path.exists(file_path):
         return err("FILE_NOT_FOUND", "缺少有效 file_path", 404)
+
+    # op 分流：mix（音效全量确定性混音）走 mix.py，修音/移调沿用 pitch 路径
+    op = (parameters or {}).get("op") or plan.get("op")
+    if op == "mix":
+        try:
+            result = mix_render(
+                file_path,
+                (parameters or {}).get("clips") or [],
+                out_dir=OUT_DIR,
+                resample_to=LOW_SR if prefer_low_sr else None,
+            )
+            result["wav_check"] = verify_wav(result["output_path"])
+            result["plan_id"] = plan_id
+            return jsonify(result)
+        except MixError as e:
+            return err("MIX_FAILED", str(e), 400)
+        except Exception as e:
+            return err("RENDER_FAILED", f"混音失败: {e}", 500)
+
     try:
         # 参数预检：与 parse_intent 同一套 preflight 规则（时间/模式/强度/范围）
         import soundfile as _sf
@@ -162,6 +183,52 @@ def execute_plan_endpoint():
         return err("PITCH_GUARD", str(e), 422)
     except Exception as e:
         return err("RENDER_FAILED", f"渲染失败: {e}", 500)
+
+
+@app.get("/sfx/list")
+def sfx_list():
+    """内置 + 用户合并的音效资产列表。"""
+    try:
+        return jsonify({"assets": list_assets()})
+    except SfxError as e:
+        return err(e.code, e.message)
+    except Exception as e:
+        return err("SFX_LIST_FAILED", f"音效库读取失败: {e}", 500)
+
+
+@app.post("/sfx/import")
+def sfx_import():
+    """导入用户本地音效 → 用户库。"""
+    body = request.get_json(silent=True) or {}
+    file_path = body.get("file_path")
+    if not file_path:
+        return err("INVALID_REQUEST", "缺少 file_path")
+    try:
+        asset = import_sfx(file_path=file_path,
+                           name=body.get("name"),
+                           category=body.get("category"),
+                           keywords=body.get("keywords"))
+        return jsonify({"asset": asset, "imported": True})
+    except SfxError as e:
+        return err(e.code, e.message)
+    except Exception as e:
+        return err("SFX_IMPORT_FAILED", f"导入失败: {e}", 500)
+
+
+@app.post("/sfx/delete")
+def sfx_delete():
+    """删除用户库音效（仅 user 来源）。"""
+    body = request.get_json(silent=True) or {}
+    sfx_id = body.get("sfx_id")
+    if not sfx_id:
+        return err("INVALID_REQUEST", "缺少 sfx_id")
+    try:
+        delete_sfx(sfx_id)
+        return jsonify({"deleted": True, "sfx_id": sfx_id})
+    except SfxError as e:
+        return err(e.code, e.message)
+    except Exception as e:
+        return err("SFX_DELETE_FAILED", f"删除失败: {e}", 500)
 
 
 if __name__ == "__main__":

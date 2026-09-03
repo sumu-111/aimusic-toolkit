@@ -1,0 +1,710 @@
+[
+  {
+    "sfx_id": "amb_rain_01",
+    "source": "bundle",
+    "name": "窗边大雨",
+    "category": "氛围",
+    "keywords": [
+      "雨",
+      "雨声",
+      "大雨",
+      "暴雨",
+      "rain",
+      "rainy"
+    ],
+    "file_path": "assets/sfx/氛围/amb_rain_01.wav",
+    "duration_sec": 30.0,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "amb_rain_02",
+    "source": "bundle",
+    "name": "城市雨声",
+    "category": "氛围",
+    "keywords": [
+      "雨",
+      "城市",
+      "街道",
+      "rain",
+      "city"
+    ],
+    "file_path": "assets/sfx/氛围/amb_rain_02.wav",
+    "duration_sec": 30.0,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "amb_storm_01",
+    "source": "bundle",
+    "name": "雷雨交加",
+    "category": "氛围",
+    "keywords": [
+      "雷",
+      "雷雨",
+      "暴风雨",
+      "闪电",
+      "thunder",
+      "storm",
+      "lightning"
+    ],
+    "file_path": "assets/sfx/氛围/amb_storm_01.wav",
+    "duration_sec": 30.0,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "amb_wind_01",
+    "source": "bundle",
+    "name": "狂风呼啸",
+    "category": "氛围",
+    "keywords": [
+      "风",
+      "狂风",
+      "呼啸",
+      "台风",
+      "wind",
+      "gale"
+    ],
+    "file_path": "assets/sfx/氛围/amb_wind_01.wav",
+    "duration_sec": 30.0,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "amb_wind_02",
+    "source": "bundle",
+    "name": "疾风循环",
+    "category": "氛围",
+    "keywords": [
+      "风",
+      "疾风",
+      "呼啸",
+      "loop",
+      "wind",
+      "whipping"
+    ],
+    "file_path": "assets/sfx/氛围/amb_wind_02.wav",
+    "duration_sec": 7.52,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "amb_wave_01",
+    "source": "bundle",
+    "name": "海浪拍岸",
+    "category": "氛围",
+    "keywords": [
+      "海浪",
+      "大海",
+      "波浪",
+      "wave",
+      "ocean",
+      "sea"
+    ],
+    "file_path": "assets/sfx/氛围/amb_wave_01.wav",
+    "duration_sec": 30.0,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "amb_fire_01",
+    "source": "bundle",
+    "name": "篝火噼啪",
+    "category": "氛围",
+    "keywords": [
+      "火",
+      "篝火",
+      "火焰",
+      "噼啪",
+      "fire",
+      "campfire",
+      "crackling"
+    ],
+    "file_path": "assets/sfx/氛围/amb_fire_01.wav",
+    "duration_sec": 12.35,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "amb_nature_01",
+    "source": "bundle",
+    "name": "山野草地",
+    "category": "氛围",
+    "keywords": [
+      "自然",
+      "森林",
+      "草地",
+      "虫鸣",
+      "鸟",
+      "风声",
+      "nature",
+      "field"
+    ],
+    "file_path": "assets/sfx/氛围/amb_nature_01.wav",
+    "duration_sec": 30.0,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "amb_bell_01",
+    "source": "bundle",
+    "name": "教堂钟声",
+    "category": "氛围",
+    "keywords": [
+      "钟声",
+      "教堂",
+      "仪式",
+      "钟",
+      "bell",
+      "church"
+    ],
+    "file_path": "assets/sfx/氛围/amb_bell_01.wav",
+    "duration_sec": 30.0,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "amb_citynight_01",
+    "source": "bundle",
+    "name": "雨夜城市广场",
+    "category": "氛围",
+    "keywords": [
+      "城市",
+      "夜",
+      "雨夜",
+      "广场",
+      "city",
+      "night",
+      "rain"
+    ],
+    "file_path": "assets/sfx/氛围/amb_citynight_01.wav",
+    "duration_sec": 30.0,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "tra_bassdrop_01",
+    "source": "bundle",
+    "name": "低音下坠·中速",
+    "category": "过渡",
+    "keywords": [
+      "低音",
+      "下坠",
+      "过渡",
+      "铺垫",
+      "riser",
+      "bass drop",
+      "drop"
+    ],
+    "file_path": "assets/sfx/过渡/tra_bassdrop_01.wav",
+    "duration_sec": 4.49,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "tra_bassdrop_02",
+    "source": "bundle",
+    "name": "低音下坠·快速",
+    "category": "过渡",
+    "keywords": [
+      "低音",
+      "下坠",
+      "快速",
+      "过渡",
+      "riser",
+      "bass drop",
+      "fast"
+    ],
+    "file_path": "assets/sfx/过渡/tra_bassdrop_02.wav",
+    "duration_sec": 2.64,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "tra_braam_01",
+    "source": "bundle",
+    "name": "史诗号角",
+    "category": "过渡",
+    "keywords": [
+      "号角",
+      "史诗",
+      "震撼",
+      "宏大",
+      "braam",
+      "horn",
+      "epic"
+    ],
+    "file_path": "assets/sfx/过渡/tra_braam_01.wav",
+    "duration_sec": 16.5,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "tra_whoosh_01",
+    "source": "bundle",
+    "name": "嗖·横扫过渡",
+    "category": "过渡",
+    "keywords": [
+      "嗖",
+      "扫过",
+      "转场",
+      "whoosh",
+      "sweep",
+      "transition"
+    ],
+    "file_path": "assets/sfx/过渡/tra_whoosh_01.wav",
+    "duration_sec": 0.5,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "tra_whoosh_02",
+    "source": "bundle",
+    "name": "玻璃碎闪呼啸",
+    "category": "过渡",
+    "keywords": [
+      "呼啸",
+      "玻璃",
+      "碎片",
+      "闪烁",
+      "whoosh",
+      "glass",
+      "shards"
+    ],
+    "file_path": "assets/sfx/过渡/tra_whoosh_02.wav",
+    "duration_sec": 2.63,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "tra_darkrise_01",
+    "source": "bundle",
+    "name": "黑暗渐强过渡",
+    "category": "过渡",
+    "keywords": [
+      "黑暗",
+      "渐强",
+      "转场",
+      "悬疑",
+      "transition",
+      "creepy",
+      "rise"
+    ],
+    "file_path": "assets/sfx/过渡/tra_darkrise_01.wav",
+    "duration_sec": 4.5,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "tra_impact_01",
+    "source": "bundle",
+    "name": "冲击横扫",
+    "category": "过渡",
+    "keywords": [
+      "冲击",
+      "撞击",
+      "扫过",
+      "impact",
+      "hit",
+      "sweep"
+    ],
+    "file_path": "assets/sfx/过渡/tra_impact_01.wav",
+    "duration_sec": 2.79,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "tra_boom_01",
+    "source": "bundle",
+    "name": "预告片轰鸣",
+    "category": "过渡",
+    "keywords": [
+      "轰鸣",
+      "预告片",
+      "震撼",
+      "爆点",
+      "boom",
+      "trailer"
+    ],
+    "file_path": "assets/sfx/过渡/tra_boom_01.wav",
+    "duration_sec": 17.27,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "tra_swish_01",
+    "source": "bundle",
+    "name": "刀剑挥斩",
+    "category": "过渡",
+    "keywords": [
+      "挥剑",
+      "斩击",
+      "嗖",
+      "刀剑",
+      "swish",
+      "sword",
+      "slice"
+    ],
+    "file_path": "assets/sfx/过渡/tra_swish_01.wav",
+    "duration_sec": 2.45,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "emo_musicbox_01",
+    "source": "bundle",
+    "name": "音乐盒旋律",
+    "category": "情绪",
+    "keywords": [
+      "音乐盒",
+      "怀旧",
+      "忧伤",
+      "童真",
+      "music box",
+      "nostalgic"
+    ],
+    "file_path": "assets/sfx/情绪/emo_musicbox_01.wav",
+    "duration_sec": 2.84,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "emo_musicbox_02",
+    "source": "bundle",
+    "name": "音乐盒·柔和变奏",
+    "category": "情绪",
+    "keywords": [
+      "音乐盒",
+      "柔和",
+      "梦幻",
+      "music box",
+      "gentle"
+    ],
+    "file_path": "assets/sfx/情绪/emo_musicbox_02.wav",
+    "duration_sec": 2.64,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "emo_magic_01",
+    "source": "bundle",
+    "name": "魔法能量·惊奇",
+    "category": "情绪",
+    "keywords": [
+      "魔法",
+      "惊奇",
+      "能量",
+      "梦幻",
+      "华丽",
+      "magic",
+      "energy",
+      "astonish"
+    ],
+    "file_path": "assets/sfx/情绪/emo_magic_01.wav",
+    "duration_sec": 19.14,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "emo_magic_02",
+    "source": "bundle",
+    "name": "魔法压迫·紧绷",
+    "category": "情绪",
+    "keywords": [
+      "魔法",
+      "紧张",
+      "压迫",
+      "悬疑",
+      "magic",
+      "tension",
+      "drone"
+    ],
+    "file_path": "assets/sfx/情绪/emo_magic_02.wav",
+    "duration_sec": 30.0,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "emo_spell_01",
+    "source": "bundle",
+    "name": "明亮法咒",
+    "category": "情绪",
+    "keywords": [
+      "魔法",
+      "咒语",
+      "明亮",
+      "闪耀",
+      "spell",
+      "magic",
+      "bright"
+    ],
+    "file_path": "assets/sfx/情绪/emo_spell_01.wav",
+    "duration_sec": 5.2,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "emo_sinister_01",
+    "source": "bundle",
+    "name": "惊悚诡异音",
+    "category": "情绪",
+    "keywords": [
+      "惊悚",
+      "恐怖",
+      "诡异",
+      "悬疑",
+      "sinister",
+      "horror",
+      "creepy"
+    ],
+    "file_path": "assets/sfx/情绪/emo_sinister_01.wav",
+    "duration_sec": 15.06,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "emo_drone_01",
+    "source": "bundle",
+    "name": "黑暗压抑低鸣",
+    "category": "情绪",
+    "keywords": [
+      "紧张",
+      "压抑",
+      "科幻",
+      "低鸣",
+      "drone",
+      "dark",
+      "industrial"
+    ],
+    "file_path": "assets/sfx/情绪/emo_drone_01.wav",
+    "duration_sec": 31.29,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "emo_kalimba_01",
+    "source": "bundle",
+    "name": "卡林巴琴·温暖上行",
+    "category": "情绪",
+    "keywords": [
+      "治愈",
+      "温暖",
+      "轻快",
+      "乐器",
+      "卡林巴",
+      "kalimba",
+      "warm"
+    ],
+    "file_path": "assets/sfx/情绪/emo_kalimba_01.wav",
+    "duration_sec": 0.55,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "emo_bell_01",
+    "source": "bundle",
+    "name": "梦幻魔法铃铛",
+    "category": "情绪",
+    "keywords": [
+      "铃铛",
+      "梦幻",
+      "闪烁",
+      "圣诞",
+      "铃",
+      "bell",
+      "magic",
+      "sparkle"
+    ],
+    "file_path": "assets/sfx/情绪/emo_bell_01.wav",
+    "duration_sec": 17.79,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "emo_happy_01",
+    "source": "bundle",
+    "name": "欢快登场",
+    "category": "情绪",
+    "keywords": [
+      "欢快",
+      "开心",
+      "正面",
+      "登场",
+      "happy",
+      "cheerful",
+      "positive"
+    ],
+    "file_path": "assets/sfx/情绪/emo_happy_01.wav",
+    "duration_sec": 0.88,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "hit_applause_01",
+    "source": "bundle",
+    "name": "人群掌声欢呼",
+    "category": "打击",
+    "keywords": [
+      "掌声",
+      "鼓掌",
+      "欢呼",
+      "观众",
+      "演唱会",
+      "applause",
+      "clap",
+      "cheer",
+      "crowd"
+    ],
+    "file_path": "assets/sfx/打击/hit_applause_01.wav",
+    "duration_sec": 26.9,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "hit_pop_01",
+    "source": "bundle",
+    "name": "卡通弹跳音效",
+    "category": "打击",
+    "keywords": [
+      "卡通",
+      "弹跳",
+      "轻快",
+      "cartoon",
+      "pop",
+      "bounce"
+    ],
+    "file_path": "assets/sfx/打击/hit_pop_01.wav",
+    "duration_sec": 1.4,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "hit_impact_01",
+    "source": "bundle",
+    "name": "卡通轻快撞击",
+    "category": "打击",
+    "keywords": [
+      "卡通",
+      "撞击",
+      "轻快",
+      "cartoon",
+      "impact",
+      "airy"
+    ],
+    "file_path": "assets/sfx/打击/hit_impact_01.wav",
+    "duration_sec": 2.5,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "hit_snap_01",
+    "source": "bundle",
+    "name": "弹响旋转特效",
+    "category": "打击",
+    "keywords": [
+      "弹响",
+      "旋转",
+      "特效",
+      "snap",
+      "spin",
+      "vibrato"
+    ],
+    "file_path": "assets/sfx/打击/hit_snap_01.wav",
+    "duration_sec": 3.2,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "hit_ui_accept_01",
+    "source": "bundle",
+    "name": "玻璃确认音",
+    "category": "打击",
+    "keywords": [
+      "确认",
+      "成功",
+      "点击",
+      "玻璃",
+      "ui",
+      "accept",
+      "click",
+      "glass"
+    ],
+    "file_path": "assets/sfx/打击/hit_ui_accept_01.wav",
+    "duration_sec": 0.44,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "hit_ui_pop_01",
+    "source": "bundle",
+    "name": "清脆弹跳提示",
+    "category": "打击",
+    "keywords": [
+      "提示",
+      "弹跳",
+      "清脆",
+      "ui",
+      "pop",
+      "notify"
+    ],
+    "file_path": "assets/sfx/打击/hit_ui_pop_01.wav",
+    "duration_sec": 0.65,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "hit_ui_deny_01",
+    "source": "bundle",
+    "name": "低沉拒绝音",
+    "category": "打击",
+    "keywords": [
+      "拒绝",
+      "错误",
+      "低沉",
+      "ui",
+      "deny",
+      "error",
+      "dark"
+    ],
+    "file_path": "assets/sfx/打击/hit_ui_deny_01.wav",
+    "duration_sec": 0.74,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "hit_click_01",
+    "source": "bundle",
+    "name": "复古按钮双击",
+    "category": "打击",
+    "keywords": [
+      "按钮",
+      "点击",
+      "复古",
+      "ui",
+      "click",
+      "button",
+      "vintage"
+    ],
+    "file_path": "assets/sfx/打击/hit_click_01.wav",
+    "duration_sec": 0.17,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "hit_punch_01",
+    "source": "bundle",
+    "name": "卡通拳击打击",
+    "category": "打击",
+    "keywords": [
+      "拳击",
+      "打击",
+      "卡通",
+      "爽快",
+      "punch",
+      "hit",
+      "comic"
+    ],
+    "file_path": "assets/sfx/打击/hit_punch_01.wav",
+    "duration_sec": 1.06,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "hit_explosion_01",
+    "source": "bundle",
+    "name": "卡通小爆炸",
+    "category": "打击",
+    "keywords": [
+      "爆炸",
+      "爆裂",
+      "卡通",
+      "boomboom",
+      "explosion",
+      "blast"
+    ],
+    "file_path": "assets/sfx/打击/hit_explosion_01.wav",
+    "duration_sec": 1.48,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  },
+  {
+    "sfx_id": "hit_coins_01",
+    "source": "bundle",
+    "name": "金币叮当",
+    "category": "打击",
+    "keywords": [
+      "金币",
+      "硬币",
+      "奖励",
+      "成功",
+      "coin",
+      "gold",
+      "reward"
+    ],
+    "file_path": "assets/sfx/打击/hit_coins_01.wav",
+    "duration_sec": 1.1,
+    "license": "Sonniss GDC 2026 Bundle (Royalty Free, CC0-equivalent usage)"
+  }
+]
