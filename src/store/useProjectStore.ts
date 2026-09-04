@@ -5,7 +5,6 @@ import {
   SFX_DEFAULTS,
   isAddSfxPlan,
   isPitchPlan,
-  isRemoveSfxPlan,
   type AddSfxPlan,
   type AnalysisResult,
   type ApiError,
@@ -287,6 +286,28 @@ function createLocalPlan(state: ProjectStateSlice): Plan | null {
     mode: 'scale',
     scale: 'C_major',
     strength: 0.8,
+  }
+}
+
+/**
+ * 前端语义定位 → 后端中文定位文本（clip.from_text / locate 溯源用）。
+ * bar:N → 第 N 小节；枚举标签 → 中文；bridge 可能塞回的未知串 → 整首。
+ */
+function locateToBackendText(locate: SfxLocate): string {
+  if (locate.startsWith('bar:')) {
+    return `第${locate.slice(4)}小节`
+  }
+  switch (locate) {
+    case 'chorus':
+      return '副歌'
+    case 'intro':
+      return '开头'
+    case 'verse':
+      return '主歌'
+    case 'outro':
+      return '结尾'
+    default:
+      return '整首'
   }
 }
 
@@ -661,24 +682,40 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
 
     const runId = ++executeRunId
     const start = performance.now()
+    const plan = state.plan
 
-    let updatedClips = state.sfxClips
-    if (isAddSfxPlan(state.plan)) {
-      const newClip: SfxClip = {
-        clip_id: globalThis.crypto?.randomUUID?.() ?? `clip-${Date.now()}`,
-        sfx_id: state.plan.asset.sfx_id,
-        start_sec: state.plan.placement.start_sec ?? 0,
-        end_sec: state.plan.placement.end_sec,
-        gain_db: state.plan.mix.gain_db,
-        fade_in_ms: state.plan.mix.fade_in_ms,
-        fade_out_ms: state.plan.mix.fade_out_ms,
-        loop: state.plan.mix.loop,
+    // P0-3 一步式：本地不预拼/不预删 clip，只把「当前全量 clips」交给后端定夺，
+    // 成功后用返回值（权威 clips）覆盖本地。此前 add 本地先加一条、后端再加一条
+    // 会造成双份实例；remove 本地先删再让后端删会触发 REMOVE_NO_MATCH。
+    let parameters: ExecuteParameters
+    if (isPitchPlan(plan)) {
+      parameters = plan
+    } else if (isAddSfxPlan(plan)) {
+      // UI 直达计划没有服务端登记（plan_id 不进 worker TRACKS），新 clip 的
+      // 素材/坐标/增益必须以 parameters 自描述；chat 计划同样适用（覆盖优先级在后端）。
+      parameters = {
+        op: 'add_sfx',
+        track: plan.track,
+        clips: state.sfxClips,
+        asset: { sfx_id: plan.asset.sfx_id },
+        clip_id:
+          globalThis.crypto?.randomUUID?.() ?? `clip-${Date.now()}`,
+        start_sec: plan.placement.start_sec ?? 0,
+        end_sec: plan.placement.end_sec,
+        gain_db: plan.mix.gain_db,
+        fade_in_ms: plan.mix.fade_in_ms,
+        fade_out_ms: plan.mix.fade_out_ms,
+        loop: plan.mix.loop,
+        from_text:
+          state.lastIntentText ||
+          `${locateToBackendText(plan.placement.locate)}加${plan.query}`,
       }
-      updatedClips = [...state.sfxClips, newClip]
-    } else if (isRemoveSfxPlan(state.plan)) {
-      const matchIds = new Set(state.plan.matches?.map((c) => c.clip_id) ?? [])
-      if (matchIds.size > 0) {
-        updatedClips = state.sfxClips.filter((c) => !matchIds.has(c.clip_id))
+    } else {
+      // remove_sfx：matches 只用于「将删清单」展示，执行时全量下发让后端删
+      parameters = {
+        op: 'remove_sfx',
+        track: plan.track,
+        clips: state.sfxClips,
       }
     }
 
@@ -687,15 +724,10 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
       error: null,
       elapsedMs: 0,
       render: null,
-      sfxClips: updatedClips,
     })
 
-    const parameters: ExecuteParameters = isPitchPlan(state.plan)
-      ? state.plan
-      : { op: state.plan.op, track: state.plan.track, clips: updatedClips }
-
     const result = await executePlan({
-      plan_id: state.plan.plan_id,
+      plan_id: plan.plan_id,
       parameters,
     })
 
@@ -710,10 +742,19 @@ export const useProjectStore = create<ProjectStateSlice>((set, get) => ({
     if (result.ok) {
       logTiming('total', totalMs)
 
+      // P0-3 权威回填：add_sfx/remove_sfx 一步式的返回值（clips 全量）才是
+      // 后端实际渲染所依据的事实源，用它覆盖本地；pitch 渲染无 clips 字段，
+      // 保持原状。adopted clips 保留 locate/from_text 等透传字段（供下次
+      // remove 的语义匹配）。
+      const adoptedClips = Array.isArray(result.data.clips)
+        ? result.data.clips
+        : get().sfxClips
+
       set({
         render: result.data,
         status: 'rendered',
         playbackSource: 'rendered',
+        sfxClips: adoptedClips,
         elapsedMs,
         lastFullRunMs: totalMs,
         workflowElapsedMs: totalMs,

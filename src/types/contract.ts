@@ -117,14 +117,13 @@ export type SfxClip = {
 }
 
 /**
- * 混音默认值。
- * ⚠ `gain_db` / `fade_in_ms` 取自 README §5；`fade_out_ms` README 未给，
- * 暂取 PPT 页 13 示例里的 800——**以任务书 §2.1 为准，收到后核对**。
+ * 混音默认值，与后端 worker._normalize_clips / execute add_sfx 的默认完全一致
+ * （任务书 §2.1）：gain -12 dB、fade_in 200ms、fade_out 500ms、不循环。
  */
 export const SFX_DEFAULTS = {
   gain_db: -12,
   fade_in_ms: 200,
-  fade_out_ms: 800,
+  fade_out_ms: 500,
   loop: false,
 } as const
 
@@ -225,6 +224,18 @@ export type ExecuteParameters = Partial<Omit<PitchPlan, 'op'>> & {
   op?: PlanOp
   /** 音效渲染唯一事实源：工程内全部 clips，每次执行全量下发 */
   clips?: SfxClip[]
+  // ── v2 一步式 add_sfx 的自描述字段 ──
+  // chat 计划已登记服务端（plan_id 关联），这些可省；UI 直达计划（F4 面板，
+  // plan_id 未进 worker TRACKS）必须靠 parameters 把新 clip 说全，后端才不依赖
+  // 服务端 plan（worker execute_plan op=add_sfx 的 parameters 覆盖优先级）。
+  asset?: { sfx_id: string }
+  clip_id?: string
+  gain_db?: number
+  fade_in_ms?: number
+  fade_out_ms?: number
+  loop?: boolean
+  /** 用户指令原文溯源，缺省时后端拼「locate 加 query」 */
+  from_text?: string
 }
 
 export type ExecutePlanReq = {
@@ -270,10 +281,23 @@ export type RenderResult = {
   before_cents: number
   after_cents: number
   curve: { t: number; before: number; after: number }[]
-  /** transpose 专用：操作类型与实际位移（applied_shifts 单位半音） */
-  op?: 'correct_pitch' | 'transpose'
+  /**
+   * 实际执行的操作类型。修音/移调沿用 v1；v2 起一步式 add_sfx / remove_sfx
+   * 渲染的产物是 mixdown，由后端按 op 分流后回填，前端据此区分结果语义。
+   */
+  op?: PlanOp
+  /** transpose 专用：实际位移（applied_shifts 单位半音） */
   applied_shifts?: number[]
   semitones?: number
+  /**
+   * v2 一步式 add_sfx：后端返回的**权威 clips 全量**（已含本次新增）。
+   * 前端应以这份结果覆盖本地 sfxClips（P0-3），别再本地预拼一份。
+   */
+  clips?: SfxClip[]
+  /** v2 一步式 add_sfx：本次新增的那条 clip */
+  added_clip?: SfxClip
+  /** v2 一步式 remove_sfx：删除后的权威 clips 全量 */
+  removed?: SfxClip[]
 }
 
 export type ApiError = {
