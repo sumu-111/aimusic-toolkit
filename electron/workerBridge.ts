@@ -345,7 +345,20 @@ export async function analyzeTrack(payload: AnalyzeReq): Promise<Result<Analysis
 }
 
 export async function parseIntentTrack(payload: ParseIntentReq): Promise<Result<Plan>> {
-  const result = await callWorker<BackendParseResult>('/parse_intent', payload, ErrorCode.PARSE_FAILED)
+  // P0-4：前后端 project_state 命名收敛。前端契约是 camelCase（ProjectState.sfxClips），
+  // 后端 intent 层（intent.py / rules.py）只读 snake_case `sfx_clips`。此前原样透传导致
+  // remove_sfx 的"将删匹配"永远拿不到现有 clips → 聊天「去掉X」必报 PARSE_FAILED 预检失败。
+  // 这里补映射：后端实际消费的字段仅 analysis（snake 命名一致）+ sfx_clips，其余原样透传。
+  const state = payload.project_state ?? {}
+  const body = {
+    text: payload.text,
+    project_state: {
+      ...(state as object),
+      analysis: state.analysis,
+      sfx_clips: Array.isArray(state.sfxClips) ? state.sfxClips : [],
+    },
+  }
+  const result = await callWorker<BackendParseResult>('/parse_intent', body, ErrorCode.PARSE_FAILED)
 
   if (!result.ok) {
     return result
